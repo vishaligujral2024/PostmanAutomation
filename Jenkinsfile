@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs "NodeJS"  // Configured in Jenkins Global Tool Configuration
+        nodejs "NodeJS"
     }
 
     options {
@@ -33,7 +33,7 @@ pipeline {
     stages {
         stage('Clean Workspace') {
             steps {
-                cleanWs()  // ✅ Now plugin handles cleanup
+                cleanWs()   // ✅ Wipe everything from previous runs
             }
         }
 
@@ -43,25 +43,25 @@ pipeline {
             }
         }
 
-       stage('Run Newman Tests') {
-    steps {
-        bat """
-            echo ===============================
-            echo Running ONLY this collection:
-            echo ${params.COLLECTION}
-            echo Using environment:
-            echo ${params.ENVIRONMENT}
-            echo ===============================
+        stage('Run Newman Tests') {
+            steps {
+                bat """
+                    echo ===============================
+                    echo Running ONLY this collection:
+                    echo ${params.COLLECTION}
+                    echo Using environment:
+                    echo ${params.ENVIRONMENT}
+                    echo ===============================
 
-            if exist allure-results rmdir /s /q allure-results
-            if exist allure-report rmdir /s /q allure-report
+                    if exist allure-results rmdir /s /q allure-results
+                    if exist allure-report rmdir /s /q allure-report
 
-            newman run "collections\\${params.COLLECTION}" ^
-                -e "environments\\${params.ENVIRONMENT}" ^
-                -r cli,allure --reporter-allure-export "allure-results"
-        """
-    }
-}
+                    newman run "collections\\${params.COLLECTION}" ^
+                        -e "environments\\${params.ENVIRONMENT}" ^
+                        -r cli,allure --reporter-allure-export "allure-results"
+                """
+            }
+        }
 
         stage('Add Environment Info') {
             steps {
