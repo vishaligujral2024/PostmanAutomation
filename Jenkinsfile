@@ -31,16 +31,18 @@ pipeline {
             }
         }
 
-        stage('Run Newman Tests') {
+       stage('Run Newman Tests') {
     steps {
         bat """
             echo ===============================
-            echo Running collection: ${params.COLLECTION}
-            echo Using environment: ${params.ENVIRONMENT}
+            echo Running ONLY this collection:
+            echo ${params.COLLECTION}
+            echo Using environment:
+            echo ${params.ENVIRONMENT}
             echo ===============================
-            
-            newman run "collections\\${params.COLLECTION}" ^
-                -e "environments\\${params.ENVIRONMENT}" ^
+
+            newman run "collections/${params.COLLECTION}" ^
+                -e "environments/${params.ENVIRONMENT}" ^
                 -r cli,allure --reporter-allure-export "allure-results"
         """
     }
