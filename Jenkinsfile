@@ -33,5 +33,43 @@ pipeline {
 
         stage('Run Newman Tests') {
             steps {
-                script {
-                    def collectionFile = param
+                bat """
+                    echo ===============================
+                    echo Running ONLY this collection:
+                    echo ${params.COLLECTION}
+                    echo Using environment:
+                    echo ${params.ENVIRONMENT}
+                    echo ===============================
+
+                    newman run "collections\\${params.COLLECTION}" ^
+                        -e "environments\\${params.ENVIRONMENT}" ^
+                        -r cli,allure --reporter-allure-export "allure-results"
+                """
+            }
+        }
+
+        stage('Add Environment Info') {
+            steps {
+                writeFile file: 'allure-results/environment.properties', text: """
+                Collection=${params.COLLECTION}
+                Environment=${params.ENVIRONMENT}
+                Jenkins_Build=${env.BUILD_NUMBER}
+                Jenkins_Job=${env.JOB_NAME}
+                Jenkins_URL=${env.BUILD_URL}
+                """
+            }
+        }
+
+        stage('Allure Report') {
+            steps {
+                allure includeProperties: true, jdk: '', results: [[path: 'allure-results']]
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
+        }
+    }
+}
