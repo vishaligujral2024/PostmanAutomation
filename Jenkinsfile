@@ -31,22 +31,24 @@ pipeline {
             }
         }
 
-        stage('Run Newman Tests') {
-            steps {
-                bat """
-                    echo ===============================
-                    echo Running ONLY this collection:
-                    echo ${params.COLLECTION}
-                    echo Using environment:
-                    echo ${params.ENVIRONMENT}
-                    echo ===============================
+       stage('Run Newman Tests') {
+    steps {
+        bat """
+            echo ===============================
+            echo Running ONLY this collection:
+            echo ${params.COLLECTION}
+            echo Using environment:
+            echo ${params.ENVIRONMENT}
+            echo ===============================
 
-                    newman run "collections\\${params.COLLECTION}" ^
-                        -e "environments\\${params.ENVIRONMENT}" ^
-                        -r cli,allure --reporter-allure-export "allure-results"
-                """
-            }
-        }
+            rmdir /s /q allure-results || echo No old allure-results to delete
+
+            newman run "collections\\${params.COLLECTION}" ^
+                -e "environments\\${params.ENVIRONMENT}" ^
+                -r cli,allure --reporter-allure-export "allure-results"
+        """
+    }
+}
 
         stage('Add Environment Info') {
             steps {
