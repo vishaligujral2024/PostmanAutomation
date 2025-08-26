@@ -1,14 +1,14 @@
 pipeline {
     agent any
     tools {
-        nodejs "nodejs" 
+        NodeJS "NodeJS"  
     }
 
     stages {
         stage('Clean old Allure folders') {
             steps {
                 script {
-                    // Clean allure-results and allure-report folders
+                    // Clean allure-results and allure-report folders before every run
                     dir('allure-results') {
                         deleteDir()
                     }
@@ -22,7 +22,6 @@ pipeline {
         stage('Run Postman Collection') {
             steps {
                 script {
-                    // Run Newman and export allure results fresh
                     sh """
                         newman run "${params.COLLECTION}" \
                         -e "${params.ENVIRONMENT}" \
