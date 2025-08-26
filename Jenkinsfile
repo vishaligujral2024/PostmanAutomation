@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs "NodeJS"   // Must match the name in Jenkins > Global Tool Configuration
+        nodejs "NodeJS"  // Configured in Jenkins Global Tool Configuration
     }
 
     parameters {
@@ -31,9 +31,9 @@ pipeline {
             }
         }
 
-        stage('Install Newman') {
+        stage('Install Newman + Allure Reporter') {
             steps {
-                bat 'npm install -g newman newman-reporter-htmlextra'
+                bat 'npm install -g newman newman-reporter-allure'
             }
         }
 
@@ -42,28 +42,21 @@ pipeline {
                 bat """
                     newman run "collections/${params.COLLECTION}" ^
                         -e "environments/${params.ENVIRONMENT}" ^
-                        -r cli,htmlextra --reporter-htmlextra-export newman-report.html
+                        -r cli,allure --reporter-allure-export "allure-results"
                 """
             }
         }
 
-        stage('Publish Report') {
+        stage('Allure Report') {
             steps {
-                publishHTML(target: [
-                    allowMissing: false,
-                    alwaysLinkToLastBuild: true,
-                    keepAll: true,
-                    reportDir: '.',
-                    reportFiles: 'newman-report.html',
-                    reportName: "Newman Report - ${params.COLLECTION} (${params.ENVIRONMENT})"
-                ])
+                allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
             }
         }
     }
 
     post {
         always {
-            archiveArtifacts artifacts: 'newman-report.html', fingerprint: true
+            archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
         }
     }
 }
