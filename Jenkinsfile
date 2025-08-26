@@ -5,6 +5,13 @@ pipeline {
         nodejs "NodeJS"  // Configured in Jenkins Global Tool Configuration
     }
 
+    options {
+        disableConcurrentBuilds()
+        skipDefaultCheckout(true)
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        cleanWs()   // Wipe workspace before each run
+    }
+
     parameters {
         choice(
             name: 'COLLECTION',
@@ -31,34 +38,37 @@ pipeline {
             }
         }
 
-       stage('Run Newman Tests') {
-    steps {
-        bat """
-            echo ===============================
-            echo Running ONLY this collection:
-            echo ${params.COLLECTION}
-            echo Using environment:
-            echo ${params.ENVIRONMENT}
-            echo ===============================
+        stage('Run Newman Tests') {
+            steps {
+                bat """
+                    echo ===============================
+                    echo Running ONLY this collection:
+                    echo ${params.COLLECTION}
+                    echo Using environment:
+                    echo ${params.ENVIRONMENT}
+                    echo ===============================
 
-            rmdir /s /q allure-results || echo No old allure-results to delete
+                    rmdir /s /q allure-results || echo No old allure-results
+                    rmdir /s /q allure-report || echo No old allure-report
 
-            newman run "collections\\${params.COLLECTION}" ^
-                -e "environments\\${params.ENVIRONMENT}" ^
-                -r cli,allure --reporter-allure-export "allure-results"
-        """
-    }
-}
+                    newman run "collections\\${params.COLLECTION}" ^
+                        -e "environments\\${params.ENVIRONMENT}" ^
+                        -r cli,allure --reporter-allure-export "allure-results"
+                """
+            }
+        }
 
         stage('Add Environment Info') {
             steps {
-                writeFile file: 'allure-results/environment.properties', text: """
-                Collection=${params.COLLECTION}
-                Environment=${params.ENVIRONMENT}
-                Jenkins_Build=${env.BUILD_NUMBER}
-                Jenkins_Job=${env.JOB_NAME}
-                Jenkins_URL=${env.BUILD_URL}
-                """
+                script {
+                    writeFile file: 'allure-results/environment.properties', text: """
+                    Collection=${params.COLLECTION}
+                    Environment=${params.ENVIRONMENT}
+                    Jenkins_Build=${env.BUILD_NUMBER}
+                    Jenkins_Job=${env.JOB_NAME}
+                    Jenkins_URL=${env.BUILD_URL}
+                    """
+                }
             }
         }
 
