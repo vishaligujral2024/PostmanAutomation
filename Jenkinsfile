@@ -30,15 +30,19 @@ pipeline {
         }
 
         stage('Run Postman Tests') {
-            steps {
-                sh """
-                    npx newman run "collections/${params.COLLECTION}.postman_collection.json" \
-                    -e "environments/${params.ENVIRONMENT}.postman_environment.json" \
-                    --reporters cli,allure \
-                    --reporter-allure-export "allure-results"
-                """
-            }
-        }
+    steps {
+        sh """
+            # delete old allure-results if any
+            rm -rf allure-results
+
+            # run only allure reporter to avoid duplicates
+            npx newman run "collections/${params.COLLECTION}.postman_collection.json" \
+            -e "environments/${params.ENVIRONMENT}.postman_environment.json" \
+            --reporters allure \
+            --reporter-allure-export "allure-results"
+        """
+    }
+}
 
         stage('Allure Report') {
             steps {
