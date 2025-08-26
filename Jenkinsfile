@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     tools {
-        NodeJS "NodeJS"
+        NodeJS "NodeJS_16"
     }
 
     stages {
-        stage('Clean Workspace') {
+        stage('Workspace Cleanup') {
             steps {
                 cleanWs()
             }
@@ -15,39 +15,35 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                    url: 'git@github.com:your-org/your-repo.git',
-                    credentialsId: 'your-ssh-key'
+                    url: 'https://github.com/vishaligujral2024/PostmanAutomation.git'
             }
         }
 
-        stage('Run Postman Tests') {
+        stage('Run Newman Tests') {
             steps {
-                sh '''
-                    # remove old reports to avoid duplicates
-                    rm -rf allure-results allure-report
+                script {
+                    // Extra safeguard: wipe old allure-results if it exists
+                    bat 'if exist allure-results rmdir /s /q allure-results'
 
-                    # run Newman ONCE
-                    npx newman run "collections/Credit Card Processing - Back Office.postman_collection.json" \
-                        -e "environments/SuitePayments - Visa - Release QA.postman_environment.json" \
-                        -r allure --reporter-allure-export "allure-results"
-                '''
+                    bat '''
+                        npx newman run "collections/Credit Card Processing - Back Office.postman_collection.json" ^
+                        -e "environments/SuitePayments - Visa - Release QA.postman_environment.json" ^
+                        -r cli,allure --reporter-allure-export "allure-results"
+                    '''
+                }
             }
         }
 
-        stage('Allure Report') {
+        stage('Generate Allure Report') {
             steps {
-                allure([
-                    includeProperties: false,
-                    jdk: '',
-                    results: [[path: 'allure-results']]
-                ])
+                allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
             }
         }
     }
 
     post {
         always {
-            archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'allure-results/**, allure-report/**', allowEmptyArchive: true
         }
     }
 }
