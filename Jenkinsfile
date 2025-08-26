@@ -31,8 +31,8 @@ pipeline {
         stage('Run Newman Tests') {
             steps {
                 bat """
-                newman run collections\\%COLLECTION% ^
-                    -e environments\\%ENVIRONMENT% ^
+                newman run collections\\${params.COLLECTION} ^
+                    -e environments\\${params.ENVIRONMENT} ^
                     -r cli,htmlextra --reporter-htmlextra-export newman-report.html
                 """
             }
