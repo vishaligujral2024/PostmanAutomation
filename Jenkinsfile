@@ -32,14 +32,19 @@ pipeline {
         }
 
         stage('Run Newman Tests') {
-            steps {
-                bat """
-                    npx newman run "collections/${params.COLLECTION}" ^
-                        -e "environments/${params.ENVIRONMENT}" ^
-                        -r cli,allure --reporter-allure-export "allure-results"
-                """
-            }
-        }
+    steps {
+        bat """
+            echo ===============================
+            echo Running collection: ${params.COLLECTION}
+            echo Using environment: ${params.ENVIRONMENT}
+            echo ===============================
+            
+            newman run "collections\\${params.COLLECTION}" ^
+                -e "environments\\${params.ENVIRONMENT}" ^
+                -r cli,allure --reporter-allure-export "allure-results"
+        """
+    }
+}
 
         stage('Add Environment Info') {
             steps {
