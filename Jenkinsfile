@@ -24,51 +24,14 @@ pipeline {
         )
     }
 
-   stage('Run Newman Tests') {
-    steps {
-        script {
-            def collectionFile = params.COLLECTION
-            def environmentFile = params.ENVIRONMENT
-
-            bat """
-                echo ===============================
-                echo Running ONLY this collection:
-                echo ${collectionFile}
-                echo Using environment:
-                echo ${environmentFile}
-                echo ===============================
-
-                newman run "collections\\${collectionFile}" ^
-                    -e "environments\\${environmentFile}" ^
-                    -r cli,allure --reporter-allure-export "allure-results"
-            """
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/vishaligujral2024/PostmanAutomation.git'
+            }
         }
-}
 
-        stage('Add Environment Info') {
+        stage('Run Newman Tests') {
             steps {
                 script {
-                    writeFile file: 'allure-results/environment.properties', text: """
-                    Collection=${params.COLLECTION}
-                    Environment=${params.ENVIRONMENT}
-                    Jenkins_Build=${env.BUILD_NUMBER}
-                    Jenkins_Job=${env.JOB_NAME}
-                    Jenkins_URL=${env.BUILD_URL}
-                    """
-                }
-            }
-        }
-
-        stage('Allure Report') {
-            steps {
-                allure includeProperties: true, jdk: '', results: [[path: 'allure-results']]
-            }
-        }
-    }
-
-    post {
-        always {
-            archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
-        }
-    }
-}
+                    def collectionFile = param
