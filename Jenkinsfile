@@ -43,7 +43,6 @@ pipeline {
                     -r cli,allure --reporter-allure-export "allure-results"
             """
         }
-    }
 }
 
         stage('Add Environment Info') {
