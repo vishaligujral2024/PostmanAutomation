@@ -7,7 +7,7 @@ pipeline {
             choices: [
                 'ACH Processing - Back Office.postman_collection.json',
                 'Credit Card Processing - Back Office.postman_collection.json'
-                          ],
+            ],
             description: 'Select which Postman Collection to run'
         )
 
@@ -15,8 +15,8 @@ pipeline {
             name: 'ENVIRONMENT',
             choices: [
                 'SuitePayments - Visa - Release QA.postman_environment.json',
-                'SuitePayments - Visa - UAT - Vishali.postman_environment.json',
-                          ],
+                'SuitePayments - Visa - UAT - Vishali.postman_environment.json'
+            ],
             description: 'Select which Environment to use'
         )
     }
@@ -24,15 +24,15 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'C:\\Users\\Elim Team Member\\AppData\\Local\\Programs\\Git\\cmd\\git.exe clone https://github.com/vishaligujral2024/PostmanAutomation.git'
+                git branch: 'main', url: 'https://github.com/vishaligujral2024/PostmanAutomation.git'
             }
         }
 
         stage('Run Newman Tests') {
             steps {
                 bat """
-                newman run collections\\${params.COLLECTION} ^
-                    -e environments\\${params.ENVIRONMENT} ^
+                newman run collections\\"${params.COLLECTION}" ^
+                    -e environments\\"${params.ENVIRONMENT}" ^
                     -r cli,htmlextra --reporter-htmlextra-export newman-report.html
                 """
             }
