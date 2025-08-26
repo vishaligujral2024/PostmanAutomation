@@ -43,22 +43,25 @@ pipeline {
             }
         }
 
-        stage('Run Newman Tests') {
-            steps {
-                bat """
-                    echo ===============================
-                    echo Running ONLY this collection:
-                    echo ${params.COLLECTION}
-                    echo Using environment:
-                    echo ${params.ENVIRONMENT}
-                    echo ===============================
+       stage('Run Newman Tests') {
+    steps {
+        bat """
+            echo ===============================
+            echo Running ONLY this collection:
+            echo ${params.COLLECTION}
+            echo Using environment:
+            echo ${params.ENVIRONMENT}
+            echo ===============================
 
-                    newman run "collections\\${params.COLLECTION}" ^
-                        -e "environments\\${params.ENVIRONMENT}" ^
-                        -r cli,allure --reporter-allure-export "allure-results"
-                """
-            }
-        }
+            if exist allure-results rmdir /s /q allure-results
+            if exist allure-report rmdir /s /q allure-report
+
+            newman run "collections\\${params.COLLECTION}" ^
+                -e "environments\\${params.ENVIRONMENT}" ^
+                -r cli,allure --reporter-allure-export "allure-results"
+        """
+    }
+}
 
         stage('Add Environment Info') {
             steps {
