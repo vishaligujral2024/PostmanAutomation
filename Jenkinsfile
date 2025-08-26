@@ -33,7 +33,7 @@ pipeline {
     stages {
         stage('Clean Workspace') {
             steps {
-                cleanWs()  // ✅ Correct usage here
+                cleanWs()  // ✅ Now plugin handles cleanup
             }
         }
 
@@ -52,9 +52,6 @@ pipeline {
                     echo Using environment:
                     echo ${params.ENVIRONMENT}
                     echo ===============================
-
-                    rmdir /s /q allure-results || echo No old allure-results
-                    rmdir /s /q allure-report || echo No old allure-report
 
                     newman run "collections\\${params.COLLECTION}" ^
                         -e "environments\\${params.ENVIRONMENT}" ^
