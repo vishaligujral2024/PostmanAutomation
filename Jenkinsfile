@@ -1,96 +1,51 @@
 pipeline {
     agent any
-
     tools {
-        nodejs "NodeJS"  // Configured in Jenkins Global Tool Configuration
-    }
-
-    options {
-        disableConcurrentBuilds()
-        skipDefaultCheckout(true)
-        buildDiscarder(logRotator(numToKeepStr: '10'))
-    }
-
-    parameters {
-        choice(
-            name: 'COLLECTION',
-            choices: [
-                'ACH Processing - Back Office.postman_collection.json',
-                'Credit Card Processing - Back Office.postman_collection.json'
-            ],
-            description: 'Select which Postman Collection to run'
-        )
-        choice(
-            name: 'ENVIRONMENT',
-            choices: [
-                'SuitePayments - Visa - Release QA.postman_environment.json',
-                'SuitePayments - Visa - UAT - Vishali.postman_environment.json'
-            ],
-            description: 'Select which Environment to use'
-        )
+        nodejs "nodejs" 
     }
 
     stages {
-        stage('Clean Workspace') {
-            steps {
-                cleanWs()   // Jenkins plugin cleanup
-                bat '''
-                    if exist allure-results rmdir /s /q allure-results
-                    if exist allure-report rmdir /s /q allure-report
-                '''
-            }
-        }
-
-        stage('Checkout') {
-            steps {
-                git branch: 'main', url: 'https://github.com/vishaligujral2024/PostmanAutomation.git'
-            }
-        }
-
-        stage('Run Newman Tests') {
-            steps {
-                bat '''
-                    echo ===============================
-                    echo Running ONLY this collection:
-                    echo %COLLECTION%
-                    echo Using environment:
-                    echo %ENVIRONMENT%
-                    echo ===============================
-
-                    rem Clean up old allure results before test run
-                    if exist allure-results rmdir /s /q allure-results
-                    if exist allure-report rmdir /s /q allure-report
-
-                    newman run "collections\\%COLLECTION%" ^
-                        -e "environments\\%ENVIRONMENT%" ^
-                        -r cli,allure --reporter-allure-export "allure-results"
-                '''
-            }
-        }
-
-        stage('Add Environment Info') {
+        stage('Clean old Allure folders') {
             steps {
                 script {
-                    writeFile file: 'allure-results/environment.properties', text: """Collection=${params.COLLECTION}
-Environment=${params.ENVIRONMENT}
-Jenkins_Build=${env.BUILD_NUMBER}
-Jenkins_Job=${env.JOB_NAME}
-Jenkins_URL=${env.BUILD_URL}
-"""
+                    // Clean allure-results and allure-report folders
+                    dir('allure-results') {
+                        deleteDir()
+                    }
+                    dir('allure-report') {
+                        deleteDir()
+                    }
+                }
+            }
+        }
+
+        stage('Run Postman Collection') {
+            steps {
+                script {
+                    // Run Newman and export allure results fresh
+                    sh """
+                        newman run "${params.COLLECTION}" \
+                        -e "${params.ENVIRONMENT}" \
+                        -r allure --reporter-allure-export "allure-results"
+                    """
                 }
             }
         }
 
         stage('Allure Report') {
             steps {
-                allure includeProperties: true, jdk: '', results: [[path: 'allure-results']]
+                allure([
+                    includeProperties: false,
+                    jdk: '',
+                    results: [[path: "allure-results"]]
+                ])
             }
         }
     }
 
     post {
         always {
-            archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
+            archiveArtifacts artifacts: '**/allure-report/**', allowEmptyArchive: true
         }
     }
 }
