@@ -9,7 +9,6 @@ pipeline {
         disableConcurrentBuilds()
         skipDefaultCheckout(true)
         buildDiscarder(logRotator(numToKeepStr: '10'))
-        cleanWs()   // Wipe workspace before each run
     }
 
     parameters {
@@ -32,6 +31,12 @@ pipeline {
     }
 
     stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()  // ✅ Correct usage here
+            }
+        }
+
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/vishaligujral2024/PostmanAutomation.git'
