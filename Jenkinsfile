@@ -1,14 +1,20 @@
 pipeline {
     agent any
     tools {
-        NodeJS "NodeJS"  
+        NodeJS "NodeJS"
     }
 
     stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()   // wipe entire workspace at start
+            }
+        }
+
         stage('Clean old Allure folders') {
             steps {
                 script {
-                    // Clean allure-results and allure-report folders before every run
+                    // Ensure allure-results and allure-report are removed
                     dir('allure-results') {
                         deleteDir()
                     }
