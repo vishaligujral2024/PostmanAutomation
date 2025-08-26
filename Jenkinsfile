@@ -1,33 +1,24 @@
 pipeline {
     agent any
     tools {
-        NodeJS "NodeJS"
+        NodeJS "NodeJS"      }
+
+    parameters {
+        choice(name: 'COLLECTION', choices: ['CreditCard.postman_collection.json', 'ACH.postman_collection.json'], description: 'Select Postman collection to run')
+        choice(name: 'ENVIRONMENT', choices: ['Dev.postman_environment.json', 'QA.postman_environment.json'], description: 'Select Postman environment to run')
     }
 
     stages {
         stage('Clean Workspace') {
             steps {
-                cleanWs()   // wipe entire workspace at start
-            }
-        }
-
-        stage('Clean old Allure folders') {
-            steps {
-                script {
-                    // Ensure allure-results and allure-report are removed
-                    dir('allure-results') {
-                        deleteDir()
-                    }
-                    dir('allure-report') {
-                        deleteDir()
-                    }
-                }
+                cleanWs()
             }
         }
 
         stage('Run Postman Collection') {
             steps {
                 script {
+                    // Run Newman once with allure reporter
                     sh """
                         newman run "${params.COLLECTION}" \
                         -e "${params.ENVIRONMENT}" \
@@ -37,7 +28,7 @@ pipeline {
             }
         }
 
-        stage('Allure Report') {
+        stage('Generate Allure Report') {
             steps {
                 allure([
                     includeProperties: false,
