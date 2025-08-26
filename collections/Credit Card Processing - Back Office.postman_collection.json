@@ -1,0 +1,2192 @@
+{
+	"info": {
+		"_postman_id": "a3b92bf1-da71-44d1-bdd2-78299f033d9c",
+		"name": "Credit Card Processing - Back Office",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "42346091",
+		"_collection_link": "https://sublime-dev-team.postman.co/workspace/SuitePayments%3A-Braintree~cead4db0-410d-4f2f-8f9b-1117a98cc8e0/collection/40985582-a3b92bf1-da71-44d1-bdd2-78299f033d9c?action=share&source=collection_link&creator=42346091"
+	},
+	"item": [
+		{
+			"name": "Create Payment Card",
+			"item": [
+				{
+					"name": "Create payment card",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let jsonData = pm.response.json();",
+									"let transactionid = jsonData.transactionid;",
+									"pm.test(\"Create payment card has response with paymentCardId: \" +",
+									"`https://${pm.environment.get(\"ACCOUNT_ID\")}.app.netsuite.com/app/paymentprocessing/paymentinstrument/paymentcard.nl?e=T&l=T&origin=ENTITY&id=${transactionid}`, function () {",
+									"    if (pm.response.code === 200) {    ",
+									"        pm.expect(transactionid).to.not.eql(null);",
+									"        pm.expect(transactionid).to.not.eql(\"\");",
+									"        pm.environment.set(\"PAYMENT_CARD_ID\", jsonData.transactionid);",
+									"    }",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Braintree-Version",
+								"value": "2023-01-01",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\t\n    \"transactionType\": \"{{TRANSACTION_TYPE_PAYMENT_CARD}}\",\n    \"entity\": \"{{ENTITY_ID}}\",\n    \"memo\": \"{{CARD_MEMO}}\",\n    \"cardnumber\": \"{{CARD_NUMBER}}\",\n    \"expirationdate\": \"{{EXPIRATION_DATE}}\",\n    \"paymentmethod\": \"{{PAYMENT_METHOD_ID}}\",\n    \"nameoncard\": \"{{NAME_ON_CARD}}\",\n    \"street\": \"{{CARD_STREET}}\",\n    \"zipcode\": \"{{CARD_ZIP_CODE}}\",\n    \"cardbrand\": \"{{CARD_BRAND_ID}}\",\n    \"preserveonfile\": {{PRESERVE_ON_FILE}}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}",
+							"host": [
+								"{{BASE_URL}}"
+							]
+						},
+						"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+					},
+					"response": []
+				},
+				{
+					"name": "Set Replace Payment Card by Token to False on PPP Copy 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Set Replace Payment Card by Token to False\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let entity = pm.iterationData.get(\"entity\");\r",
+									"pm.environment.set(\"entity\", \"13\");\r",
+									"\r",
+									"let cardnumber = pm.iterationData.get(\"cardnumber\");\r",
+									"pm.environment.set(\"cardnumber\", \"4111111111111111\");\r",
+									"\r",
+									"let paymentmethod = pm.iterationData.get(\"paymentmethod\");\r",
+									"pm.environment.set(\"paymentmethod\", \"5\");\r",
+									"\r",
+									"let cardbrand = pm.iterationData.get(\"cardbrand\");\r",
+									"pm.environment.set(\"cardbrand\", \"1\");\r",
+									"\r",
+									"let paymentcardcsc = pm.iterationData.get(\"paymentcardcsc\");\r",
+									"pm.environment.set(\"paymentcardcsc\", \"737\");\r",
+									"\r",
+									"let quantity = pm.iterationData.get(\"quantity\");\r",
+									"pm.environment.set(\"quantity\", \"2\");\r",
+									"\r",
+									"let amount = pm.iterationData.get(\"amount\");\r",
+									"pm.environment.set(\"amount\", \"100.01\");"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "oauth1",
+							"oauth1": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}",
+									"type": "string"
+								},
+								{
+									"key": "realm",
+									"value": "{{ACCOUNT_ID}}",
+									"type": "string"
+								},
+								{
+									"key": "tokenSecret",
+									"value": "{{TOKEN_SECRET}}",
+									"type": "string"
+								},
+								{
+									"key": "consumerSecret",
+									"value": "{{CONSUMER_SECRET}}",
+									"type": "string"
+								},
+								{
+									"key": "consumerKey",
+									"value": "{{CONSUMER_KEY}}",
+									"type": "string"
+								},
+								{
+									"key": "addEmptyParamsToSign",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "addParamsToHeader",
+									"value": true,
+									"type": "boolean"
+								},
+								{
+									"key": "signatureMethod",
+									"value": "HMAC-SHA256",
+									"type": "string"
+								},
+								{
+									"key": "version",
+									"value": "1.0",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Braintree-Version",
+								"value": "2023-01-01",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\t\n    \"transactionType\": \"paymentprocessingprofile\",\n    \"transactionId\": \"{{PAYMENT_PROCESSING_PROFILE_ID}}\",\n    \"replacepaymentcardbytoken\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}",
+							"host": [
+								"{{BASE_URL}}"
+							]
+						},
+						"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Create Cash Sale",
+			"item": [
+				{
+					"name": "Create Cash Sale",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const recordAction = 'Create';",
+									"const recordType = 'Cash Sale';",
+									"const recordTypeKey = 'cashsale';",
+									"const defaultTestName = `${recordAction} ${recordType} has response with`;",
+									"const responseData = {",
+									"    trxnId: {",
+									"        testName: `${recordAction} ${recordType} has response with transactionId: ` + `https://${pm.environment.get(\"ACCOUNT_ID\")}.app.netsuite.com/app/accounting/transactions/${recordTypeKey}.nl?id=`,",
+									"        setByResponseKey: 'transactionid',",
+									"        setsEnvVarKey: 'SALE_CASH_ID'",
+									"    },",
+									"    paymentEventResult: {",
+									"        setByResponseKey: 'paymenteventresult',",
+									"        expectedValue: 'ACCEPT'",
+									"    },",
+									"    paymentEventHoldReason: {",
+									"        setByResponseKey: 'paymenteventholdreason',",
+									"        expectedValue: 'ACCEPT'",
+									"    },",
+									"    braintreeLegacyId: {",
+									"        setByResponseKey: 'LegacyID',",
+									"    },",
+									"    braintreeTrxnId: {",
+									"        setByResponseKey: 'BraintreeTransactionID',",
+									"    },",
+									"    braintreeTrxnUrl: {",
+									"        setByResponseKey: 'BraintreeTransactionURL',",
+									"    },",
+									"    transactionnumber: {",
+									"        setByResponseKey: 'transactionnumber',",
+									"    },",
+									"     memo: {",
+									"        setByResponseKey: 'memo',",
+									"    }",
+									"}",
+									"// 1.  Set test data values",
+									"if (pm.response && pm.response.json()) {",
+									"    let jsonData = pm.response.json();",
+									"    for (let key in responseData) {",
+									"        responseData[key].value = jsonData[responseData[key].setByResponseKey];",
+									"    }",
+									"}",
+									"",
+									"// 2. Execute tests",
+									"for (let key in responseData) {",
+									"    const testData = responseData[key];",
+									"    let testName = (testData.testName) ? testData.testName + `${testData.value}` : defaultTestName + ` ${key} : ${testData.value}`;",
+									"    if (testData.expectedValue) {",
+									"        testName += ` is equal to ${testData.expectedValue}`",
+									"    };",
+									"    pm.test(testName, () => {",
+									"        pm.expect(testData.value).to.not.eql(null);",
+									"        pm.expect(testData.value).to.not.eql(\"\");",
+									"        if (testData.expectedValue) {",
+									"            pm.expect(testData.value).to.equal(testData.expectedValue);",
+									"        }",
+									"        if (testData.setsEnvVarKey) {",
+									"            pm.environment.set(testData.setsEnvVarKey, testData.value);",
+									"        }",
+									"    });",
+									"}",
+									"// pm.test(defaultTestName + \" MEMO \" + pm.environment.get('CARD_MEMO'), () => {",
+									"//         const cardMemo = pm.environment.get('CARD_MEMO');",
+									"//         pm.expect(cardMemo).to.not.eql(null);",
+									"//         pm.expect(cardMemo).to.not.eql(\"\");",
+									"// });",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "oauth1",
+							"oauth1": [
+								{
+									"key": "realm",
+									"value": "{{ACCOUNT_ID}}",
+									"type": "string"
+								},
+								{
+									"key": "tokenSecret",
+									"value": "{{TOKEN_SECRET}}",
+									"type": "string"
+								},
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}",
+									"type": "string"
+								},
+								{
+									"key": "consumerSecret",
+									"value": "{{CONSUMER_SECRET}}",
+									"type": "string"
+								},
+								{
+									"key": "consumerKey",
+									"value": "{{CONSUMER_KEY}}",
+									"type": "string"
+								},
+								{
+									"key": "addEmptyParamsToSign",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "addParamsToHeader",
+									"value": true,
+									"type": "boolean"
+								},
+								{
+									"key": "signatureMethod",
+									"value": "HMAC-SHA256",
+									"type": "string"
+								},
+								{
+									"key": "version",
+									"value": "1.0",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Braintree-Version",
+								"value": "2023-01-01",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{    \n    \"transactionType\": \"{{TRANSACTION_TYPE_CS}}\",\n    \"entity\": \"{{ENTITY_ID}}\",\n    \"memo\": \"TC05_Verify a Cash Sale will charge all listed payment Cards\",\n    \"location\": \"{{LOCATION_ID}}\",\n    \"paymentoption\": \"{{PAYMENT_CARD_ID}}\",\n    \"paymentcardcsc\": \"{{CARD_SECURITY_CODE}}\",\n    \"paymentprocessingprofile\": \"{{PAYMENT_PROCESSING_PROFILE_ID}}\",\n    \"handlingmode\": \"{{HANDLING_MODE_PROCESS}}\",\n    \"paymentoperation\": \"{{PAYMENT_OPERATION_SALE}}\",\n    \"sublists\": {{SUBLIST_ITEM}}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}",
+							"host": [
+								"{{BASE_URL}}"
+							]
+						},
+						"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Create Sales Order - Sale",
+			"item": [
+				{
+					"name": "Create Sales Order - Sale",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const recordAction = 'Create';",
+									"const recordType = 'Sales Order';",
+									"const recordTypeKey = 'salesord';",
+									"const defaultTestName = `${recordAction} ${recordType} has response with`;",
+									"const responseData = {",
+									"    trxnId: {",
+									"        testName: `${recordAction} ${recordType} has response with transactionId: ` + `https://${pm.environment.get(\"ACCOUNT_ID\")}.app.netsuite.com/app/accounting/transactions/${recordTypeKey}.nl?id=`,",
+									"        setByResponseKey: 'transactionid',",
+									"        setsEnvVarKey: 'SALES_ORDER_SALE_ID'",
+									"    },",
+									"    paymentEventResult: {",
+									"        setByResponseKey: 'paymenteventresult',",
+									"        expectedValue: 'ACCEPT'",
+									"    },",
+									"    paymentEventHoldReason: {",
+									"        setByResponseKey: 'paymenteventholdreason',",
+									"        expectedValue: 'ACCEPT'",
+									"    },",
+									"    braintreeLegacyId: {",
+									"        setByResponseKey: 'LegacyID',",
+									"    },",
+									"    braintreeTrxnId: {",
+									"        setByResponseKey: 'BraintreeTransactionID',",
+									"    },",
+									"    braintreeTrxnUrl: {",
+									"        setByResponseKey: 'BraintreeTransactionURL',",
+									"    },",
+									"    transactionnumber: {",
+									"        setByResponseKey: 'transactionnumber',",
+									"    },",
+									"     memo: {",
+									"        setByResponseKey: 'memo',",
+									"    }",
+									"}",
+									"// 1.  Set test data values",
+									"if (pm.response && pm.response.json()) {",
+									"    let jsonData = pm.response.json();",
+									"    for (let key in responseData) {",
+									"        responseData[key].value = jsonData[responseData[key].setByResponseKey];",
+									"    }",
+									"}",
+									"",
+									"// 2. Execute tests",
+									"for (let key in responseData) {",
+									"    const testData = responseData[key];",
+									"    let testName = (testData.testName) ? testData.testName + `${testData.value}` : defaultTestName + ` ${key} : ${testData.value}`;",
+									"    if (testData.expectedValue) {",
+									"        testName += ` is equal to ${testData.expectedValue}`",
+									"    };",
+									"    pm.test(testName, () => {",
+									"        pm.expect(testData.value).to.not.eql(null);",
+									"        pm.expect(testData.value).to.not.eql(\"\");",
+									"        if (testData.expectedValue) {",
+									"            pm.expect(testData.value).to.equal(testData.expectedValue);",
+									"        }",
+									"        if (testData.setsEnvVarKey) {",
+									"            pm.environment.set(testData.setsEnvVarKey, testData.value);",
+									"        }",
+									"    });",
+									"}",
+									"",
+									"// pm.test(defaultTestName + \" MEMO \" + pm.environment.get('CARD_MEMO'), () => {",
+									"//         const cardMemo = pm.environment.get('CARD_MEMO');",
+									"//         pm.expect(cardMemo).to.not.eql(null);",
+									"//         pm.expect(cardMemo).to.not.eql(\"\");",
+									"// });",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Braintree-Version",
+								"value": "2023-01-01",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{    \n    \"transactionType\": \"{{TRANSACTION_TYPE_SO}}\",\n    \"entity\": \"{{ENTITY_ID}}\",\n    \"memo\": \"TC04_Verify that a Sales Order will create a Customer Deposit with a Sale payment Operation using the list Payment Cards  \",\n    \"paymentoption\": \"{{PAYMENT_CARD_ID}}\",\n    \"paymentcardcsc\": \"{{CARD_SECURITY_CODE}}\",\n    \"paymentprocessingprofile\": \"{{PAYMENT_PROCESSING_PROFILE_ID}}\",\n    \"handlingmode\": \"{{HANDLING_MODE_PROCESS}}\",\n    \"paymentoperation\": \"{{PAYMENT_OPERATION_SALE}}\",\n    \"sublists\": {{SUBLIST_ITEM}}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}",
+							"host": [
+								"{{BASE_URL}}"
+							]
+						},
+						"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Sales Order Auth",
+			"item": [
+				{
+					"name": "Create Sales Order - Auth",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const recordAction = 'Create';",
+									"const recordType = 'Sales Order';",
+									"const recordTypeKey = 'salesord';",
+									"const defaultTestName = `${recordAction} ${recordType} has response with`;",
+									"const responseData = {",
+									"    trxnId: {",
+									"        testName: `${recordAction} ${recordType} has response with transactionId: ` + `https://${pm.environment.get(\"ACCOUNT_ID\")}.app.netsuite.com/app/accounting/transactions/${recordTypeKey}.nl?id=`,",
+									"        setByResponseKey: 'transactionid',",
+									"        setsEnvVarKey: 'SALES_ORDER_AUTH_REAUTH_ID'",
+									"    },",
+									"    paymentEventResult: {",
+									"        setByResponseKey: 'paymenteventresult',",
+									"        expectedValue: 'ACCEPT'",
+									"    },",
+									"    paymentEventHoldReason: {",
+									"        setByResponseKey: 'paymenteventholdreason',",
+									"        expectedValue: 'ACCEPT'",
+									"    },",
+									"    braintreeLegacyId: {",
+									"        setByResponseKey: 'LegacyID',",
+									"    },",
+									"    braintreeTrxnId: {",
+									"        setByResponseKey: 'BraintreeTransactionID',",
+									"    },",
+									"    braintreeTrxnUrl: {",
+									"        setByResponseKey: 'BraintreeTransactionURL',",
+									"    },",
+									"    transactionnumber: {",
+									"        setByResponseKey: 'transactionnumber',",
+									"    },",
+									"     memo: {",
+									"        setByResponseKey: 'memo',",
+									"    }",
+									"}",
+									"// 1.  Set test data values",
+									"if (pm.response && pm.response.json()) {",
+									"    let jsonData = pm.response.json();",
+									"    for (let key in responseData) {",
+									"        responseData[key].value = jsonData[responseData[key].setByResponseKey];",
+									"    }",
+									"}",
+									"",
+									"// 2. Execute tests",
+									"for (let key in responseData) {",
+									"    const testData = responseData[key];",
+									"    let testName = (testData.testName) ? testData.testName + `${testData.value}` : defaultTestName + ` ${key} : ${testData.value}`;",
+									"    if (testData.expectedValue) {",
+									"        testName += ` is equal to ${testData.expectedValue}`",
+									"    };",
+									"    pm.test(testName, () => {",
+									"        pm.expect(testData.value).to.not.eql(null);",
+									"        pm.expect(testData.value).to.not.eql(\"\");",
+									"        if (testData.expectedValue) {",
+									"            pm.expect(testData.value).to.equal(testData.expectedValue);",
+									"        }",
+									"        if (testData.setsEnvVarKey) {",
+									"            pm.environment.set(testData.setsEnvVarKey, testData.value);",
+									"        }",
+									"    });",
+									"}",
+									"",
+									"// pm.test(defaultTestName + \" MEMO \" + pm.environment.get('CARD_MEMO'), () => {",
+									"//         const cardMemo = pm.environment.get('CARD_MEMO');",
+									"//         pm.expect(cardMemo).to.not.eql(null);",
+									"//         pm.expect(cardMemo).to.not.eql(\"\");",
+									"// });",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Braintree-Version",
+								"value": "2023-01-01",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{    \n    \"transactionType\": \"{{TRANSACTION_TYPE_SO}}\",\n    \"entity\": \"{{ENTITY_ID}}\",\n    \"memo\": \"TC01_Verify a Sales Order will authorize a new payment card. \",\n    \"paymentoption\": \"{{PAYMENT_CARD_ID}}\",\n    \"paymentcardcsc\": \"{{CARD_SECURITY_CODE}}\",\n    \"paymentprocessingprofile\": \"{{PAYMENT_PROCESSING_PROFILE_ID}}\",\n    \"handlingmode\": \"{{HANDLING_MODE_PROCESS}}\",\n    \"paymentoperation\": \"{{PAYMENT_OPERATION_AUTH}}\",\n    \"sublists\": {{SUBLIST_ITEM}}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}",
+							"host": [
+								"{{BASE_URL}}"
+							]
+						},
+						"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Auth and Capture Sales Order",
+			"item": [
+				{
+					"name": "Normal Auth and Full Capture SO",
+					"item": [
+						{
+							"name": "Create Sales Order - Auth - Full",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const recordAction = 'Create';",
+											"const recordType = 'Sales Order';",
+											"const recordTypeKey = 'salesord';",
+											"const defaultTestName = `${recordAction} ${recordType} has response with`;",
+											"const responseData = {",
+											"    trxnId: {",
+											"        testName: `${recordAction} ${recordType} has response with transactionId: ` + `https://${pm.environment.get(\"ACCOUNT_ID\")}.app.netsuite.com/app/accounting/transactions/${recordTypeKey}.nl?id=`,",
+											"        setByResponseKey: 'transactionid',",
+											"        setsEnvVarKey: 'SALES_ORDER_AUTH_FULL_CAPTURE_ID'",
+											"    },",
+											"    paymentEventResult: {",
+											"        setByResponseKey: 'paymenteventresult',",
+											"        expectedValue: 'ACCEPT'",
+											"    },",
+											"    paymentEventHoldReason: {",
+											"        setByResponseKey: 'paymenteventholdreason',",
+											"        expectedValue: 'ACCEPT'",
+											"    },",
+											"    braintreeLegacyId: {",
+											"        setByResponseKey: 'LegacyID',",
+											"    },",
+											"    braintreeTrxnId: {",
+											"        setByResponseKey: 'BraintreeTransactionID',",
+											"    },",
+											"    braintreeTrxnUrl: {",
+											"        setByResponseKey: 'BraintreeTransactionURL',",
+											"    },",
+											"    transactionnumber: {",
+											"        setByResponseKey: 'transactionnumber',",
+											"    },",
+											"     memo: {",
+											"        setByResponseKey: 'memo',",
+											"    }",
+											"}",
+											"// 1.  Set test data values",
+											"if (pm.response && pm.response.json()) {",
+											"    let jsonData = pm.response.json();",
+											"    for (let key in responseData) {",
+											"        responseData[key].value = jsonData[responseData[key].setByResponseKey];",
+											"    }",
+											"}",
+											"",
+											"// 2. Execute tests",
+											"for (let key in responseData) {",
+											"    const testData = responseData[key];",
+											"    let testName = (testData.testName) ? testData.testName + `${testData.value}` : defaultTestName + ` ${key} : ${testData.value}`;",
+											"    if (testData.expectedValue) {",
+											"        testName += ` is equal to ${testData.expectedValue}`",
+											"    };",
+											"    pm.test(testName, () => {",
+											"        pm.expect(testData.value).to.not.eql(null);",
+											"        pm.expect(testData.value).to.not.eql(\"\");",
+											"        if (testData.expectedValue) {",
+											"            pm.expect(testData.value).to.equal(testData.expectedValue);",
+											"        }",
+											"        if (testData.setsEnvVarKey) {",
+											"            pm.environment.set(testData.setsEnvVarKey, testData.value);",
+											"        }",
+											"    });",
+											"}",
+											"",
+											"// pm.test(defaultTestName + \" MEMO \" + pm.environment.get('CARD_MEMO'), () => {",
+											"//         const cardMemo = pm.environment.get('CARD_MEMO');",
+											"//         pm.expect(cardMemo).to.not.eql(null);",
+											"//         pm.expect(cardMemo).to.not.eql(\"\");",
+											"// });",
+											"",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Braintree-Version",
+										"value": "2023-01-01",
+										"type": "text"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{    \n    \"transactionType\": \"{{TRANSACTION_TYPE_SO}}\",\n    \"entity\": \"{{ENTITY_ID}}\",\n    \"memo\": \"TC03_Verify a valid Payment Card will Capture on a referenced Cash Sale i.e from an Authorized Sales Order\",\n    \"paymentoption\": \"{{PAYMENT_CARD_ID}}\",\n    \"paymentcardcsc\": \"{{CARD_SECURITY_CODE}}\",\n    \"paymentprocessingprofile\": \"{{PAYMENT_PROCESSING_PROFILE_ID}}\",\n    \"handlingmode\": \"{{HANDLING_MODE_PROCESS}}\",\n    \"paymentoperation\": \"{{PAYMENT_OPERATION_AUTH}}\",\n    \"sublists\": {{SUBLIST_ITEM}}\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}",
+									"host": [
+										"{{BASE_URL}}"
+									]
+								},
+								"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+							},
+							"response": []
+						},
+						{
+							"name": "Capture Auth Sales Order - Full",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const recordAction = 'Update';",
+											"const recordType = 'Sales Order';",
+											"const recordTypeKey = 'cashsale';",
+											"const defaultTestName = `${recordAction} ${recordType} has response with`;",
+											"const responseData = {",
+											"    trxnId: {",
+											"        testName: `${recordAction} ${recordType} has response with transactionId: ` + `https://${pm.environment.get(\"ACCOUNT_ID\")}.app.netsuite.com/app/accounting/transactions/${recordTypeKey}.nl?id=`,",
+											"        setByResponseKey: 'transactionid',",
+											"        setsEnvVarKey: 'SALES_ORDER_FULL_CAPTURE_ID'",
+											"    },",
+											"    paymentEventResult: {",
+											"        setByResponseKey: 'paymenteventresult',",
+											"        expectedValue: 'ACCEPT'",
+											"    },",
+											"    paymentEventHoldReason: {",
+											"        setByResponseKey: 'paymenteventholdreason',",
+											"        expectedValue: 'ACCEPT'",
+											"    },",
+											"    braintreeLegacyId: {",
+											"        setByResponseKey: 'LegacyID',",
+											"    },",
+											"    braintreeTrxnId: {",
+											"        setByResponseKey: 'BraintreeTransactionID',",
+											"    },",
+											"    braintreeTrxnUrl: {",
+											"        setByResponseKey: 'BraintreeTransactionURL',",
+											"    },",
+											"    transactionnumber: {",
+											"        setByResponseKey: 'transactionnumber',",
+											"    }",
+											"}",
+											"// 1.  Set test data values",
+											"if (pm.response && pm.response.json()) {",
+											"    let jsonData = pm.response.json();",
+											"    for (let key in responseData) {",
+											"        responseData[key].value = jsonData[responseData[key].setByResponseKey];",
+											"    }",
+											"}",
+											"",
+											"// 2. Execute tests",
+											"for (let key in responseData) {",
+											"    const testData = responseData[key];",
+											"    let testName = (testData.testName) ? testData.testName + `${testData.value}` : defaultTestName + ` ${key} : ${testData.value}`;",
+											"    if (testData.expectedValue) {",
+											"        testName += ` is equal to ${testData.expectedValue}`",
+											"    };",
+											"    pm.test(testName, () => {",
+											"        pm.expect(testData.value).to.not.eql(null);",
+											"        pm.expect(testData.value).to.not.eql(\"\");",
+											"        if (testData.expectedValue) {",
+											"            pm.expect(testData.value).to.equal(testData.expectedValue);",
+											"        }",
+											"        if (testData.setsEnvVarKey) {",
+											"            pm.environment.set(testData.setsEnvVarKey, testData.value);",
+											"        }",
+											"    });",
+											"}",
+											"",
+											"// pm.test(defaultTestName + \" MEMO \" + pm.environment.get('CARD_MEMO'), () => {",
+											"//         const cardMemo = pm.environment.get('CARD_MEMO');",
+											"//         pm.expect(cardMemo).to.not.eql(null);",
+											"//         pm.expect(cardMemo).to.not.eql(\"\");",
+											"// });",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Braintree-Version",
+										"value": "2023-01-01",
+										"type": "text"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"transactionType\": \"{{TRANSACTION_TYPE_SO}}\",\n    \"transactionId\": \"{{SALES_ORDER_AUTH_FULL_CAPTURE_ID}}\", \n    \"handlingmode\": \"{{HANDLING_MODE_PROCESS}}\",\n    \"paymentoperation\": \"{{PAYMENT_OPERATION_CAPTURE}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}",
+									"host": [
+										"{{BASE_URL}}"
+									]
+								},
+								"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Normal Auth and Partial Capture SO",
+					"item": [
+						{
+							"name": "Create Sales Order - Auth - Partial Capture",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const recordAction = 'Create';",
+											"const recordType = 'Sales Order';",
+											"const recordTypeKey = 'salesord';",
+											"const defaultTestName = `${recordAction} ${recordType} has response with`;",
+											"const responseData = {",
+											"    trxnId: {",
+											"        testName: `${recordAction} ${recordType} has response with transactionId: ` + `https://${pm.environment.get(\"ACCOUNT_ID\")}.app.netsuite.com/app/accounting/transactions/${recordTypeKey}.nl?id=`,",
+											"        setByResponseKey: 'transactionid',",
+											"        setsEnvVarKey: 'SALES_ORDER_AUTH_PARTIAL_CAPTURE_ID'",
+											"    },",
+											"    paymentEventResult: {",
+											"        setByResponseKey: 'paymenteventresult',",
+											"        expectedValue: 'ACCEPT'",
+											"    },",
+											"    paymentEventHoldReason: {",
+											"        setByResponseKey: 'paymenteventholdreason',",
+											"        expectedValue: 'ACCEPT'",
+											"    },",
+											"    braintreeLegacyId: {",
+											"        setByResponseKey: 'LegacyID',",
+											"    },",
+											"    braintreeTrxnId: {",
+											"        setByResponseKey: 'BraintreeTransactionID',",
+											"    },",
+											"    braintreeTrxnUrl: {",
+											"        setByResponseKey: 'BraintreeTransactionURL',",
+											"    },",
+											"    transactionnumber: {",
+											"        setByResponseKey: 'transactionnumber',",
+											"    },",
+											"     memo: {",
+											"        setByResponseKey: 'memo',",
+											"    }",
+											"}",
+											"// 1.  Set test data values",
+											"if (pm.response && pm.response.json()) {",
+											"    let jsonData = pm.response.json();",
+											"    for (let key in responseData) {",
+											"        responseData[key].value = jsonData[responseData[key].setByResponseKey];",
+											"    }",
+											"}",
+											"",
+											"// 2. Execute tests",
+											"for (let key in responseData) {",
+											"    const testData = responseData[key];",
+											"    let testName = (testData.testName) ? testData.testName + `${testData.value}` : defaultTestName + ` ${key} : ${testData.value}`;",
+											"    if (testData.expectedValue) {",
+											"        testName += ` is equal to ${testData.expectedValue}`",
+											"    };",
+											"    pm.test(testName, () => {",
+											"        pm.expect(testData.value).to.not.eql(null);",
+											"        pm.expect(testData.value).to.not.eql(\"\");",
+											"        if (testData.expectedValue) {",
+											"            pm.expect(testData.value).to.equal(testData.expectedValue);",
+											"        }",
+											"        if (testData.setsEnvVarKey) {",
+											"            pm.environment.set(testData.setsEnvVarKey, testData.value);",
+											"        }",
+											"    });",
+											"}",
+											"",
+											"// pm.test(defaultTestName + \" MEMO \" + pm.environment.get('CARD_MEMO'), () => {",
+											"//         const cardMemo = pm.environment.get('CARD_MEMO');",
+											"//         pm.expect(cardMemo).to.not.eql(null);",
+											"//         pm.expect(cardMemo).to.not.eql(\"\");",
+											"// });",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Braintree-Version",
+										"value": "2023-01-01",
+										"type": "text"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{    \n    \"transactionType\": \"{{TRANSACTION_TYPE_SO}}\",\n    \"entity\": \"{{ENTITY_ID}}\",\n    \"memo\": \"TC22_Verify that Merchant partially fulfils  and capture payment for items over a period of time. \",\n    \"paymentoption\": \"{{PAYMENT_CARD_ID}}\",\n    \"paymentcardcsc\": \"{{CARD_SECURITY_CODE}}\",\n    \"paymentprocessingprofile\": \"{{PAYMENT_PROCESSING_PROFILE_ID}}\",\n    \"handlingmode\": \"{{HANDLING_MODE_PROCESS}}\",\n    \"paymentoperation\": \"{{PAYMENT_OPERATION_AUTH}}\",\n    \"sublists\": {{SUBLIST_ITEM}}\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}",
+									"host": [
+										"{{BASE_URL}}"
+									]
+								},
+								"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+							},
+							"response": []
+						},
+						{
+							"name": "Partial Capture Authorization",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const recordAction = 'Update';",
+											"const recordType = 'Sales Order';",
+											"const recordTypeKey = 'cashsale';",
+											"const defaultTestName = `${recordAction} ${recordType} has response with`;",
+											"const responseData = {",
+											"    trxnId: {",
+											"        testName: `${recordAction} ${recordType} has response with transactionId: ` + `https://${pm.environment.get(\"ACCOUNT_ID\")}.app.netsuite.com/app/accounting/transactions/${recordTypeKey}.nl?id=`,",
+											"        setByResponseKey: 'transactionid',",
+											"        setsEnvVarKey: 'SALES_ORDER_PARTIAL_CAPTURE_ID'",
+											"    },",
+											"    paymentEventResult: {",
+											"        setByResponseKey: 'paymenteventresult',",
+											"        expectedValue: 'ACCEPT'",
+											"    },",
+											"    paymentEventHoldReason: {",
+											"        setByResponseKey: 'paymenteventholdreason',",
+											"        expectedValue: 'ACCEPT'",
+											"    },",
+											"    braintreeLegacyId: {",
+											"        setByResponseKey: 'LegacyID',",
+											"    },",
+											"    braintreeTrxnId: {",
+											"        setByResponseKey: 'BraintreeTransactionID',",
+											"    },",
+											"    braintreeTrxnUrl: {",
+											"        setByResponseKey: 'BraintreeTransactionURL',",
+											"    },",
+											"    transactionnumber: {",
+											"        setByResponseKey: 'transactionnumber',",
+											"    }",
+											"}",
+											"// 1.  Set test data values",
+											"if (pm.response && pm.response.json()) {",
+											"    let jsonData = pm.response.json();",
+											"    for (let key in responseData) {",
+											"        responseData[key].value = jsonData[responseData[key].setByResponseKey];",
+											"    }",
+											"}",
+											"",
+											"// 2. Execute tests",
+											"for (let key in responseData) {",
+											"    const testData = responseData[key];",
+											"    let testName = (testData.testName) ? testData.testName + `${testData.value}` : defaultTestName + ` ${key} : ${testData.value}`;",
+											"    if (testData.expectedValue) {",
+											"        testName += ` is equal to ${testData.expectedValue}`",
+											"    };",
+											"    pm.test(testName, () => {",
+											"        pm.expect(testData.value).to.not.eql(null);",
+											"        pm.expect(testData.value).to.not.eql(\"\");",
+											"        if (testData.expectedValue) {",
+											"            pm.expect(testData.value).to.equal(testData.expectedValue);",
+											"        }",
+											"        if (testData.setsEnvVarKey) {",
+											"            pm.environment.set(testData.setsEnvVarKey, testData.value);",
+											"        }",
+											"    });",
+											"}",
+											"",
+											"pm.test(defaultTestName + \" MEMO \" + pm.environment.get('CARD_MEMO'), () => {",
+											"        const cardMemo = pm.environment.get('CARD_MEMO');",
+											"        pm.expect(cardMemo).to.not.eql(null);",
+											"        pm.expect(cardMemo).to.not.eql(\"\");",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Braintree-Version",
+										"value": "2023-01-01",
+										"type": "text"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"transactionType\": \"{{TRANSACTION_TYPE_SO}}\",\n    \"transactionId\": \"{{SALES_ORDER_AUTH_PARTIAL_CAPTURE_ID}}\", \n    \"handlingmode\": \"{{HANDLING_MODE_PROCESS}}\",\n    \"paymentoperation\": \"{{PAYMENT_OPERATION_CAPTURE}}\",\n    \"sublists\": {{SUBLIST_ITEM_PARTIAL_CAPTURE}}\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}",
+									"host": [
+										"{{BASE_URL}}"
+									]
+								},
+								"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Normal Auth and Over Capture",
+					"item": [
+						{
+							"name": "Create Sales Order - Auth - Over Capture",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const recordAction = 'Create';",
+											"const recordType = 'Sales Order';",
+											"const recordTypeKey = 'salesord';",
+											"const defaultTestName = `${recordAction} ${recordType} has response with`;",
+											"const responseData = {",
+											"    trxnId: {",
+											"        testName: `${recordAction} ${recordType} has response with transactionId: ` + `https://${pm.environment.get(\"ACCOUNT_ID\")}.app.netsuite.com/app/accounting/transactions/${recordTypeKey}.nl?id=`,",
+											"        setByResponseKey: 'transactionid',",
+											"        setsEnvVarKey: 'SALES_ORDER_AUTH_OVER_CAPTURE_ID'",
+											"    },",
+											"    paymentEventResult: {",
+											"        setByResponseKey: 'paymenteventresult',",
+											"        expectedValue: 'ACCEPT'",
+											"    },",
+											"    paymentEventHoldReason: {",
+											"        setByResponseKey: 'paymenteventholdreason',",
+											"        expectedValue: 'ACCEPT'",
+											"    },",
+											"    braintreeLegacyId: {",
+											"        setByResponseKey: 'LegacyID',",
+											"    },",
+											"    braintreeTrxnId: {",
+											"        setByResponseKey: 'BraintreeTransactionID',",
+											"    },",
+											"    braintreeTrxnUrl: {",
+											"        setByResponseKey: 'BraintreeTransactionURL',",
+											"    },",
+											"    transactionnumber: {",
+											"        setByResponseKey: 'transactionnumber',",
+											"    },",
+											"     memo: {",
+											"        setByResponseKey: 'memo',",
+											"    }",
+											"}",
+											"// 1.  Set test data values",
+											"if (pm.response && pm.response.json()) {",
+											"    let jsonData = pm.response.json();",
+											"    for (let key in responseData) {",
+											"        responseData[key].value = jsonData[responseData[key].setByResponseKey];",
+											"    }",
+											"}",
+											"",
+											"// 2. Execute tests",
+											"for (let key in responseData) {",
+											"    const testData = responseData[key];",
+											"    let testName = (testData.testName) ? testData.testName + `${testData.value}` : defaultTestName + ` ${key} : ${testData.value}`;",
+											"    if (testData.expectedValue) {",
+											"        testName += ` is equal to ${testData.expectedValue}`",
+											"    };",
+											"    pm.test(testName, () => {",
+											"        pm.expect(testData.value).to.not.eql(null);",
+											"        pm.expect(testData.value).to.not.eql(\"\");",
+											"        if (testData.expectedValue) {",
+											"            pm.expect(testData.value).to.equal(testData.expectedValue);",
+											"        }",
+											"        if (testData.setsEnvVarKey) {",
+											"            pm.environment.set(testData.setsEnvVarKey, testData.value);",
+											"        }",
+											"    });",
+											"}",
+											"",
+											"// pm.test(defaultTestName + \" MEMO \" + pm.environment.get('CARD_MEMO'), () => {",
+											"//         const cardMemo = pm.environment.get('CARD_MEMO');",
+											"//         pm.expect(cardMemo).to.not.eql(null);",
+											"//         pm.expect(cardMemo).to.not.eql(\"\");",
+											"// });",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Braintree-Version",
+										"value": "2023-01-01",
+										"type": "text"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{    \n    \"transactionType\": \"{{TRANSACTION_TYPE_SO}}\",\n    \"entity\": \"{{ENTITY_ID}}\",\n    \"memo\": \"TC24_Verify an Eligible Merchant can over Capture an amount on a payment card \",\n    \"paymentoption\": \"{{PAYMENT_CARD_ID}}\",\n    \"paymentcardcsc\": \"{{CARD_SECURITY_CODE}}\",\n    \"paymentprocessingprofile\": \"{{PAYMENT_PROCESSING_PROFILE_ID}}\",\n    \"handlingmode\": \"{{HANDLING_MODE_PROCESS}}\",\n    \"paymentoperation\": \"{{PAYMENT_OPERATION_AUTH}}\",\n    \"sublists\": {{SUBLIST_ITEM}}\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}",
+									"host": [
+										"{{BASE_URL}}"
+									]
+								},
+								"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+							},
+							"response": []
+						},
+						{
+							"name": "Over Capture Authorization",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const recordAction = 'Update';",
+											"const recordType = 'Sales Order';",
+											"const recordTypeKey = 'cashsale';",
+											"const defaultTestName = `${recordAction} ${recordType} has response with`;",
+											"const responseData = {",
+											"    trxnId: {",
+											"        testName: `${recordAction} ${recordType} has response with transactionId: ` + `https://${pm.environment.get(\"ACCOUNT_ID\")}.app.netsuite.com/app/accounting/transactions/${recordTypeKey}.nl?id=`,",
+											"        setByResponseKey: 'transactionid',",
+											"        setsEnvVarKey: 'SALES_ORDER_OVER_CAPTURE_ID'",
+											"    },",
+											"    paymentEventResult: {",
+											"        setByResponseKey: 'paymenteventresult',",
+											"        expectedValue: 'ACCEPT'",
+											"    },",
+											"    paymentEventHoldReason: {",
+											"        setByResponseKey: 'paymenteventholdreason',",
+											"        expectedValue: 'ACCEPT'",
+											"    },",
+											"    braintreeLegacyId: {",
+											"        setByResponseKey: 'LegacyID',",
+											"    },",
+											"    braintreeTrxnId: {",
+											"        setByResponseKey: 'BraintreeTransactionID',",
+											"    },",
+											"    braintreeTrxnUrl: {",
+											"        setByResponseKey: 'BraintreeTransactionURL',",
+											"    },",
+											"    transactionnumber: {",
+											"        setByResponseKey: 'transactionnumber',",
+											"    }",
+											"}",
+											"// 1.  Set test data values",
+											"if (pm.response && pm.response.json()) {",
+											"    let jsonData = pm.response.json();",
+											"    for (let key in responseData) {",
+											"        responseData[key].value = jsonData[responseData[key].setByResponseKey];",
+											"    }",
+											"}",
+											"",
+											"// 2. Execute tests",
+											"for (let key in responseData) {",
+											"    const testData = responseData[key];",
+											"    let testName = (testData.testName) ? testData.testName + `${testData.value}` : defaultTestName + ` ${key} : ${testData.value}`;",
+											"    if (testData.expectedValue) {",
+											"        testName += ` is equal to ${testData.expectedValue}`",
+											"    };",
+											"    pm.test(testName, () => {",
+											"        pm.expect(testData.value).to.not.eql(null);",
+											"        pm.expect(testData.value).to.not.eql(\"\");",
+											"        if (testData.expectedValue) {",
+											"            pm.expect(testData.value).to.equal(testData.expectedValue);",
+											"        }",
+											"        if (testData.setsEnvVarKey) {",
+											"            pm.environment.set(testData.setsEnvVarKey, testData.value);",
+											"        }",
+											"    });",
+											"}",
+											"",
+											"pm.test(defaultTestName + \" MEMO \" + pm.environment.get('CARD_MEMO'), () => {",
+											"        const cardMemo = pm.environment.get('CARD_MEMO');",
+											"        pm.expect(cardMemo).to.not.eql(null);",
+											"        pm.expect(cardMemo).to.not.eql(\"\");",
+											"});",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Braintree-Version",
+										"value": "2023-01-01",
+										"type": "text"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"transactionType\": \"{{TRANSACTION_TYPE_SO}}\",\n    \"transactionId\": \"{{SALES_ORDER_AUTH_OVER_CAPTURE_ID}}\", \n    \"handlingmode\": \"{{HANDLING_MODE_PROCESS}}\",\n    \"paymentoperation\": \"{{PAYMENT_OPERATION_CAPTURE}}\",\n    \"sublists\": {{SUBLIST_ITEM_OVER_CAPTURE}}\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BASE_URL}}",
+									"host": [
+										"{{BASE_URL}}"
+									]
+								},
+								"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Void Sales Order",
+			"item": [
+				{
+					"name": "Create Sales Order - Auth - Void",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const recordAction = 'Create';",
+									"const recordType = 'Sales Order';",
+									"const recordTypeKey = 'salesord';",
+									"const defaultTestName = `${recordAction} ${recordType} has response with`;",
+									"const responseData = {",
+									"    trxnId: {",
+									"        testName: `${recordAction} ${recordType} has response with transactionId: ` + `https://${pm.environment.get(\"ACCOUNT_ID\")}.app.netsuite.com/app/accounting/transactions/${recordTypeKey}.nl?id=`,",
+									"        setByResponseKey: 'transactionid',",
+									"        setsEnvVarKey: 'SALES_ORDER_AUTH_VOID_ID'",
+									"    },",
+									"    paymentEventResult: {",
+									"        setByResponseKey: 'paymenteventresult',",
+									"        expectedValue: 'ACCEPT'",
+									"    },",
+									"    paymentEventHoldReason: {",
+									"        setByResponseKey: 'paymenteventholdreason',",
+									"        expectedValue: 'ACCEPT'",
+									"    },",
+									"    braintreeLegacyId: {",
+									"        setByResponseKey: 'LegacyID',",
+									"    },",
+									"    braintreeTrxnId: {",
+									"        setByResponseKey: 'BraintreeTransactionID',",
+									"    },",
+									"    braintreeTrxnUrl: {",
+									"        setByResponseKey: 'BraintreeTransactionURL',",
+									"    },",
+									"    transactionnumber: {",
+									"        setByResponseKey: 'transactionnumber',",
+									"    },",
+									"     memo: {",
+									"        setByResponseKey: 'memo',",
+									"    }",
+									"}",
+									"// 1.  Set test data values",
+									"if (pm.response && pm.response.json()) {",
+									"    let jsonData = pm.response.json();",
+									"    for (let key in responseData) {",
+									"        responseData[key].value = jsonData[responseData[key].setByResponseKey];",
+									"    }",
+									"}",
+									"",
+									"// 2. Execute tests",
+									"for (let key in responseData) {",
+									"    const testData = responseData[key];",
+									"    let testName = (testData.testName) ? testData.testName + `${testData.value}` : defaultTestName + ` ${key} : ${testData.value}`;",
+									"    if (testData.expectedValue) {",
+									"        testName += ` is equal to ${testData.expectedValue}`",
+									"    };",
+									"    pm.test(testName, () => {",
+									"        pm.expect(testData.value).to.not.eql(null);",
+									"        pm.expect(testData.value).to.not.eql(\"\");",
+									"        if (testData.expectedValue) {",
+									"            pm.expect(testData.value).to.equal(testData.expectedValue);",
+									"        }",
+									"        if (testData.setsEnvVarKey) {",
+									"            pm.environment.set(testData.setsEnvVarKey, testData.value);",
+									"        }",
+									"    });",
+									"}",
+									"",
+									"// pm.test(defaultTestName + \" MEMO \" + pm.environment.get('CARD_MEMO'), () => {",
+									"//         const cardMemo = pm.environment.get('CARD_MEMO');",
+									"//         pm.expect(cardMemo).to.not.eql(null);",
+									"//         pm.expect(cardMemo).to.not.eql(\"\");",
+									"// });",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Braintree-Version",
+								"value": "2023-01-01",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{    \n    \"transactionType\": \"{{TRANSACTION_TYPE_SO}}\",\n    \"entity\": \"{{ENTITY_ID}}\",\n    \"memo\": \"TC16_Verify a Valid Authorization would void on a Sales Order\",\n    \"paymentoption\": \"{{PAYMENT_CARD_ID}}\",\n    \"paymentcardcsc\": \"{{CARD_SECURITY_CODE}}\",\n    \"paymentprocessingprofile\": \"{{PAYMENT_PROCESSING_PROFILE_ID}}\",\n    \"handlingmode\": \"{{HANDLING_MODE_PROCESS}}\",\n    \"paymentoperation\": \"{{PAYMENT_OPERATION_AUTH}}\",\n    \"sublists\": {{SUBLIST_ITEM}}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}",
+							"host": [
+								"{{BASE_URL}}"
+							]
+						},
+						"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Auth Sales Order - Void",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const recordAction = 'Update';",
+									"const recordType = 'Sales Order';",
+									"const recordTypeKey = 'salesord';",
+									"const defaultTestName = `${recordAction} ${recordType} has response with`;",
+									"const responseData = {",
+									"    trxnId: {",
+									"        testName: `${recordAction} ${recordType} has response with transactionId: ` + `https://${pm.environment.get(\"ACCOUNT_ID\")}.app.netsuite.com/app/accounting/transactions/${recordTypeKey}.nl?id=`,",
+									"        setByResponseKey: 'transactionid',",
+									"        setsEnvVarKey: 'SALES_ORDER_VOID_ID'",
+									"    },",
+									"    paymentEventResult: {",
+									"        setByResponseKey: 'paymenteventresult',",
+									"        expectedValue: 'ACCEPT'",
+									"    },",
+									"    paymentEventHoldReason: {",
+									"        setByResponseKey: 'paymenteventholdreason',",
+									"        expectedValue: 'ACCEPT'",
+									"    },",
+									"    // braintreeLegacyId: {",
+									"    //     setByResponseKey: 'LegacyID',",
+									"    // },",
+									"    braintreeTrxnId: {",
+									"        setByResponseKey: 'BraintreeTransactionID',",
+									"    },",
+									"    braintreeTrxnUrl: {",
+									"        setByResponseKey: 'BraintreeTransactionURL',",
+									"    },",
+									"    transactionnumber: {",
+									"        setByResponseKey: 'transactionnumber',",
+									"    }",
+									"}",
+									"// 1.  Set test data values",
+									"if (pm.response && pm.response.json()) {",
+									"    let jsonData = pm.response.json();",
+									"    for (let key in responseData) {",
+									"        responseData[key].value = jsonData[responseData[key].setByResponseKey];",
+									"    }",
+									"}",
+									"",
+									"// 2. Execute tests",
+									"for (let key in responseData) {",
+									"    const testData = responseData[key];",
+									"    let testName = (testData.testName) ? testData.testName + `${testData.value}` : defaultTestName + ` ${key} : ${testData.value}`;",
+									"    if (testData.expectedValue) {",
+									"        testName += ` is equal to ${testData.expectedValue}`",
+									"    };",
+									"    pm.test(testName, () => {",
+									"        pm.expect(testData.value).to.not.eql(null);",
+									"        pm.expect(testData.value).to.not.eql(\"\");",
+									"        if (testData.expectedValue) {",
+									"            pm.expect(testData.value).to.equal(testData.expectedValue);",
+									"        }",
+									"        if (testData.setsEnvVarKey) {",
+									"            pm.environment.set(testData.setsEnvVarKey, testData.value);",
+									"        }",
+									"    });",
+									"}",
+									"",
+									"pm.test(defaultTestName + \" MEMO \" + pm.environment.get('CARD_MEMO'), () => {",
+									"        const cardMemo = pm.environment.get('CARD_MEMO');",
+									"        pm.expect(cardMemo).to.not.eql(null);",
+									"        pm.expect(cardMemo).to.not.eql(\"\");",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Braintree-Version",
+								"value": "2023-01-01",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"transactionType\": \"{{TRANSACTION_TYPE_SO}}\",\n    \"transactionId\": \"{{SALES_ORDER_AUTH_VOID_ID}}\", \n    \"handlingmode\": \"{{HANDLING_MODE_PROCESS}}\",\n    \"paymentoperation\": \"VOID\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}",
+							"host": [
+								"{{BASE_URL}}"
+							]
+						},
+						"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Create Sale Customer Deposit",
+			"item": [
+				{
+					"name": "Create Sale Customer Deposit",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const recordAction = 'Create';",
+									"const recordType = 'Customer Deposit';",
+									"const recordTypeKey = 'custdep';",
+									"const defaultTestName = `${recordAction} ${recordType} has response with`;",
+									"const responseData = {",
+									"    trxnId: {",
+									"        testName: `${recordAction} ${recordType} has response with transactionId: ` + `https://${pm.environment.get(\"ACCOUNT_ID\")}.app.netsuite.com/app/accounting/transactions/${recordTypeKey}.nl?id=`,",
+									"        setByResponseKey: 'transactionid',",
+									"        setsEnvVarKey: 'SALE_CUSTOMER_DEPOSIT_ID'",
+									"    },",
+									"    paymentEventResult: {",
+									"        setByResponseKey: 'paymenteventresult',",
+									"        expectedValue: 'ACCEPT'",
+									"    },",
+									"    paymentEventHoldReason: {",
+									"        setByResponseKey: 'paymenteventholdreason',",
+									"        expectedValue: 'ACCEPT'",
+									"    },",
+									"    braintreeLegacyId: {",
+									"        setByResponseKey: 'LegacyID',",
+									"    },",
+									"    braintreeTrxnId: {",
+									"        setByResponseKey: 'BraintreeTransactionID',",
+									"    },",
+									"    braintreeTrxnUrl: {",
+									"        setByResponseKey: 'BraintreeTransactionURL',",
+									"    },",
+									"    transactionnumber: {",
+									"        setByResponseKey: 'transactionnumber',",
+									"    },",
+									"     memo: {",
+									"        setByResponseKey: 'memo',",
+									"    }",
+									"}",
+									"// 1.  Set test data values",
+									"if (pm.response && pm.response.json()) {",
+									"    let jsonData = pm.response.json();",
+									"    for (let key in responseData) {",
+									"        responseData[key].value = jsonData[responseData[key].setByResponseKey];",
+									"    }",
+									"}",
+									"",
+									"// 2. Execute tests",
+									"for (let key in responseData) {",
+									"    const testData = responseData[key];",
+									"    let testName = (testData.testName) ? testData.testName + `${testData.value}` : defaultTestName + ` ${key} : ${testData.value}`;",
+									"    if (testData.expectedValue) {",
+									"        testName += ` is equal to ${testData.expectedValue}`",
+									"    };",
+									"    pm.test(testName, () => {",
+									"        pm.expect(testData.value).to.not.eql(null);",
+									"        pm.expect(testData.value).to.not.eql(\"\");",
+									"        if (testData.expectedValue) {",
+									"            pm.expect(testData.value).to.equal(testData.expectedValue);",
+									"        }",
+									"        if (testData.setsEnvVarKey) {",
+									"            pm.environment.set(testData.setsEnvVarKey, testData.value);",
+									"        }",
+									"    });",
+									"}",
+									"",
+									"// pm.test(defaultTestName + \" MEMO \" + pm.environment.get('CARD_MEMO'), () => {",
+									"//         const cardMemo = pm.environment.get('CARD_MEMO');",
+									"//         pm.expect(cardMemo).to.not.eql(null);",
+									"//         pm.expect(cardMemo).to.not.eql(\"\");",
+									"// });",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Braintree-Version",
+								"value": "2023-01-01",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"transactionType\": \"{{TRANSACTION_TYPE_CD}}\",\n    \"customer\": \"{{ENTITY_ID}}\",\n    \"memo\": \"TC07_Verify a Customer Deposit will charge all listed payment Cards.\",\n    \"paymentoption\": \"{{PAYMENT_CARD_ID}}\",\n    \"paymentcardcsc\": \"{{CARD_SECURITY_CODE}}\",\n    \"paymentprocessingprofile\": \"{{PAYMENT_PROCESSING_PROFILE_ID}}\",\n    \"handlingmode\": \"{{HANDLING_MODE_PROCESS}}\",\n    \"paymentoperation\": \"{{PAYMENT_OPERATION_SALE}}\",\n    \"payment\": \"{{CUSTOMER_DEPOSIT_AMOUNT}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}",
+							"host": [
+								"{{BASE_URL}}"
+							]
+						},
+						"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Create Sale Customer Payment",
+			"item": [
+				{
+					"name": "Create Sale Customer Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const recordAction = 'Create';",
+									"const recordType = 'Customer Payment';",
+									"const recordTypeKey = 'custpymt';",
+									"const defaultTestName = `${recordAction} ${recordType} has response with`;",
+									"const responseData = {",
+									"    trxnId: {",
+									"        testName: `${recordAction} ${recordType} has response with transactionId: ` + `https://${pm.environment.get(\"ACCOUNT_ID\")}.app.netsuite.com/app/accounting/transactions/${recordTypeKey}.nl?id=`,",
+									"        setByResponseKey: 'transactionid',",
+									"        setsEnvVarKey: 'SALE_CUSTOMER_PAYMENT_ID'",
+									"    },",
+									"    paymentEventResult: {",
+									"        setByResponseKey: 'paymenteventresult',",
+									"        expectedValue: 'ACCEPT'",
+									"    },",
+									"    paymentEventHoldReason: {",
+									"        setByResponseKey: 'paymenteventholdreason',",
+									"        expectedValue: 'ACCEPT'",
+									"    },",
+									"    braintreeLegacyId: {",
+									"        setByResponseKey: 'LegacyID',",
+									"    },",
+									"    braintreeTrxnId: {",
+									"        setByResponseKey: 'BraintreeTransactionID',",
+									"    },",
+									"    braintreeTrxnUrl: {",
+									"        setByResponseKey: 'BraintreeTransactionURL',",
+									"    },",
+									"    transactionnumber: {",
+									"        setByResponseKey: 'transactionnumber',",
+									"    },",
+									"     memo: {",
+									"        setByResponseKey: 'memo',",
+									"    }",
+									"}",
+									"// 1.  Set test data values",
+									"if (pm.response && pm.response.json()) {",
+									"    let jsonData = pm.response.json();",
+									"    for (let key in responseData) {",
+									"        responseData[key].value = jsonData[responseData[key].setByResponseKey];",
+									"    }",
+									"}",
+									"",
+									"// 2. Execute tests",
+									"for (let key in responseData) {",
+									"    const testData = responseData[key];",
+									"    let testName = (testData.testName) ? testData.testName + `${testData.value}` : defaultTestName + ` ${key} : ${testData.value}`;",
+									"    if (testData.expectedValue) {",
+									"        testName += ` is equal to ${testData.expectedValue}`",
+									"    };",
+									"    pm.test(testName, () => {",
+									"        pm.expect(testData.value).to.not.eql(null);",
+									"        pm.expect(testData.value).to.not.eql(\"\");",
+									"        if (testData.expectedValue) {",
+									"            pm.expect(testData.value).to.equal(testData.expectedValue);",
+									"        }",
+									"        if (testData.setsEnvVarKey) {",
+									"            pm.environment.set(testData.setsEnvVarKey, testData.value);",
+									"        }",
+									"    });",
+									"}",
+									"",
+									"// pm.test(defaultTestName + \" MEMO \" + pm.environment.get('CARD_MEMO'), () => {",
+									"//         const cardMemo = pm.environment.get('CARD_MEMO');",
+									"//         pm.expect(cardMemo).to.not.eql(null);",
+									"//         pm.expect(cardMemo).to.not.eql(\"\");",
+									"// });",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Braintree-Version",
+								"value": "2023-01-01",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"transactionType\": \"{{TRANSACTION_TYPE_CP}}\",\n    \"customer\": \"{{ENTITY_ID}}\",\n    \"memo\": \"TC09_Verify a Customer Payment will charge all listed payment Cards}\",\n    \"paymentoption\": \"{{PAYMENT_CARD_ID}}\",\n    \"paymentcardcsc\": \"{{CARD_SECURITY_CODE}}\",    \n    \"paymentprocessingprofile\": \"{{PAYMENT_PROCESSING_PROFILE_ID}}\",\n    \"handlingmode\": \"{{HANDLING_MODE_PROCESS}}\",\n    \"paymentoperation\": \"{{PAYMENT_OPERATION_SALE}}\",\n    \"payment\": \"{{CUSTOMER_DEPOSIT_AMOUNT}}\",\n    \"autoapply\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}",
+							"host": [
+								"{{BASE_URL}}"
+							]
+						},
+						"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Reauth Sales Order",
+			"item": [
+				{
+					"name": "Reauthorize Sales Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const recordAction = 'Update';",
+									"const recordType = 'Sales Order';",
+									"const recordTypeKey = 'salesord';",
+									"const defaultTestName = `${recordAction} ${recordType} has response with`;",
+									"const responseData = {",
+									"    trxnId: {",
+									"        testName: `${recordAction} ${recordType} has response with transactionId: ` + `https://${pm.environment.get(\"ACCOUNT_ID\")}.app.netsuite.com/app/accounting/transactions/${recordTypeKey}.nl?id=`,",
+									"        setByResponseKey: 'transactionid',",
+									"        setsEnvVarKey: 'SALES_ORDER_REAUTH_ID'",
+									"    },",
+									"    paymentEventResult: {",
+									"        setByResponseKey: 'paymenteventresult',",
+									"        expectedValue: 'ACCEPT'",
+									"    },",
+									"    paymentEventHoldReason: {",
+									"        setByResponseKey: 'paymenteventholdreason',",
+									"        expectedValue: 'ACCEPT'",
+									"    },",
+									"    // braintreeLegacyId: {",
+									"    //     setByResponseKey: 'LegacyID',",
+									"    // },",
+									"    braintreeTrxnId: {",
+									"        setByResponseKey: 'BraintreeTransactionID',",
+									"    },",
+									"    braintreeTrxnUrl: {",
+									"        setByResponseKey: 'BraintreeTransactionURL',",
+									"    },",
+									"    transactionnumber: {",
+									"        setByResponseKey: 'transactionnumber',",
+									"    }",
+									"}",
+									"// 1.  Set test data values",
+									"if (pm.response && pm.response.json()) {",
+									"    let jsonData = pm.response.json();",
+									"    for (let key in responseData) {",
+									"        responseData[key].value = jsonData[responseData[key].setByResponseKey];",
+									"    }",
+									"}",
+									"",
+									"// 2. Execute tests",
+									"for (let key in responseData) {",
+									"    const testData = responseData[key];",
+									"    let testName = (testData.testName) ? testData.testName + `${testData.value}` : defaultTestName + ` ${key} : ${testData.value}`;",
+									"    if (testData.expectedValue) {",
+									"        testName += ` is equal to ${testData.expectedValue}`",
+									"    };",
+									"    pm.test(testName, () => {",
+									"        pm.expect(testData.value).to.not.eql(null);",
+									"        pm.expect(testData.value).to.not.eql(\"\");",
+									"        if (testData.expectedValue) {",
+									"            pm.expect(testData.value).to.equal(testData.expectedValue);",
+									"        }",
+									"        if (testData.setsEnvVarKey) {",
+									"            pm.environment.set(testData.setsEnvVarKey, testData.value);",
+									"        }",
+									"    });",
+									"}",
+									"",
+									"pm.test(defaultTestName + \" MEMO \" + pm.environment.get('CARD_MEMO'), () => {",
+									"        const cardMemo = pm.environment.get('CARD_MEMO');",
+									"        pm.expect(cardMemo).to.not.eql(null);",
+									"        pm.expect(cardMemo).to.not.eql(\"\");",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Braintree-Version",
+								"value": "2023-01-01",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"transactionType\": \"{{TRANSACTION_TYPE_SO}}\",\n    \"transactionId\": \"{{SALES_ORDER_AUTH_REAUTH_ID}}\", \n    \"handlingmode\": \"{{HANDLING_MODE_PROCESS}}\",\n    \"paymentoperation\": \"{{PAYMENT_OPERATION_AUTH}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}",
+							"host": [
+								"{{BASE_URL}}"
+							]
+						},
+						"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "oauth1",
+		"oauth1": [
+			{
+				"key": "addParamsToHeader",
+				"value": true,
+				"type": "boolean"
+			},
+			{
+				"key": "signatureMethod",
+				"value": "HMAC-SHA256",
+				"type": "string"
+			},
+			{
+				"key": "realm",
+				"value": "{{ACCOUNT_ID}}",
+				"type": "string"
+			},
+			{
+				"key": "tokenSecret",
+				"value": "{{TOKEN_SECRET}}",
+				"type": "string"
+			},
+			{
+				"key": "token",
+				"value": "{{ACCESS_TOKEN}}",
+				"type": "string"
+			},
+			{
+				"key": "consumerSecret",
+				"value": "{{CONSUMER_SECRET}}",
+				"type": "string"
+			},
+			{
+				"key": "consumerKey",
+				"value": "{{CONSUMER_KEY}}",
+				"type": "string"
+			},
+			{
+				"key": "version",
+				"value": "1.0",
+				"type": "string"
+			},
+			{
+				"key": "addEmptyParamsToSign",
+				"value": false,
+				"type": "boolean"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					"pm.test(\"Successful POST request\", function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "SALES_ORDER_FULL_CAPTURE_ID",
+			"value": ""
+		}
+	]
+}
