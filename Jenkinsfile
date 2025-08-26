@@ -37,15 +37,15 @@ pipeline {
             }
         }
 
-        stage('Run Newman Tests') {
-            steps {
-                bat """
-                newman run collections\\"${params.COLLECTION}" ^
-                    -e environments\\"${params.ENVIRONMENT}" ^
-                    -r cli,htmlextra --reporter-htmlextra-export newman-report.html
-                """
-            }
-        }
+       stage('Run Newman Tests') {
+    steps {
+        bat '''
+            newman run "collections/Credit Card Processing - Back Office.postman_collection.json" ^
+                -e "environments/SuitePayments - Visa - UAT - Vishali.postman_environment.json" ^
+                -r cli,htmlextra --reporter-htmlextra-export newman-report.html
+        '''
+    }
+}
 
         stage('Publish Report') {
             steps {
