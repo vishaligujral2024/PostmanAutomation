@@ -34,7 +34,7 @@ pipeline {
     stages {
         stage('Clean Workspace') {
             steps {
-                cleanWs()   // ✅ Always start fresh (removes allure-results & artifacts)
+                cleanWs()   // ✅ Always start fresh
             }
         }
 
@@ -42,7 +42,7 @@ pipeline {
             steps {
                 git branch: 'main',
                     url: 'https://github.com/vishaligujral2024/PostmanAutomation.git',
-                    credentialsId: 'github-token'   // 🔑 Use your saved credentialsId here
+                    credentialsId: 'github-token'   // 🔑 Replace with your Jenkins credentialsId
             }
         }
 
@@ -89,4 +89,7 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts artifac
+            archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
+        }
+    }
+}
