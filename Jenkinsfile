@@ -20,20 +20,25 @@ pipeline {
         }
 
         stage('Run Newman Tests') {
-            steps {
-                script {
-                    // Extra safeguard: wipe old allure-results if it exists
-                    bat 'if exist allure-results rmdir /s /q allure-results'
+    steps {
+        bat """
+            echo Cleaning old results...
+            if exist allure-results rmdir /s /q allure-results
+            if exist allure-report rmdir /s /q allure-report
 
-                    bat '''
-                        npx newman run "collections/Credit Card Processing - Back Office.postman_collection.json" ^
-                        -e "environments/SuitePayments - Visa - Release QA.postman_environment.json" ^
-                        -r cli,allure --reporter-allure-export "allure-results"
-                    '''
-                }
-            }
-        }
+            echo ===============================
+            echo Running ONLY this collection:
+            echo ${params.COLLECTION}
+            echo Using environment:
+            echo ${params.ENVIRONMENT}
+            echo ===============================
 
+            npx newman run "collections\\${params.COLLECTION}" ^
+                -e "environments\\${params.ENVIRONMENT}" ^
+                -r cli,allure --reporter-allure-export "allure-results"
+        """
+    }
+}
         stage('Generate Allure Report') {
             steps {
                 allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
