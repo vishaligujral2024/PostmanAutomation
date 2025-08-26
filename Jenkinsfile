@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs "NodeJS"   // 👈 must match the name you gave in Jenkins
+    }
+
     parameters {
         choice(
             name: 'COLLECTION',
@@ -10,7 +14,6 @@ pipeline {
             ],
             description: 'Select which Postman Collection to run'
         )
-
         choice(
             name: 'ENVIRONMENT',
             choices: [
@@ -25,6 +28,12 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/vishaligujral2024/PostmanAutomation.git'
+            }
+        }
+
+        stage('Install Newman') {
+            steps {
+                bat "npm install -g newman newman-reporter-htmlextra"
             }
         }
 
