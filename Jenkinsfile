@@ -24,27 +24,25 @@ pipeline {
         )
     }
 
-    stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main', url: 'https://github.com/vishaligujral2024/PostmanAutomation.git'
-            }
-        }
-
-       stage('Run Newman Tests') {
+   stage('Run Newman Tests') {
     steps {
-        bat """
-            echo ===============================
-            echo Running ONLY this collection:
-            echo ${params.COLLECTION}
-            echo Using environment:
-            echo ${params.ENVIRONMENT}
-            echo ===============================
+        script {
+            def collectionFile = params.COLLECTION
+            def environmentFile = params.ENVIRONMENT
 
-            newman run "collections/${params.COLLECTION}" ^
-                -e "environments/${params.ENVIRONMENT}" ^
-                -r cli,allure --reporter-allure-export "allure-results"
-        """
+            bat """
+                echo ===============================
+                echo Running ONLY this collection:
+                echo ${collectionFile}
+                echo Using environment:
+                echo ${environmentFile}
+                echo ===============================
+
+                newman run "collections\\${collectionFile}" ^
+                    -e "environments\\${environmentFile}" ^
+                    -r cli,allure --reporter-allure-export "allure-results"
+            """
+        }
     }
 }
 
