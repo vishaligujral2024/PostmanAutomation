@@ -2,13 +2,14 @@ pipeline {
     agent any
 
     tools {
-        nodejs "NodeJS"
+        nodejs "NodeJS"  // Configured in Jenkins Global Tool Configuration
     }
 
     options {
         disableConcurrentBuilds()
         skipDefaultCheckout(true)
         buildDiscarder(logRotator(numToKeepStr: '10'))
+        timestamps()
     }
 
     parameters {
@@ -33,13 +34,15 @@ pipeline {
     stages {
         stage('Clean Workspace') {
             steps {
-                cleanWs()   // ✅ Wipe everything from previous runs
+                cleanWs()   // ✅ Always start fresh (removes allure-results & artifacts)
             }
         }
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/vishaligujral2024/PostmanAutomation.git'
+                git branch: 'main',
+                    url: 'https://github.com/vishaligujral2024/PostmanAutomation.git',
+                    credentialsId: 'github-token'   // 🔑 Use your saved credentialsId here
             }
         }
 
@@ -86,7 +89,4 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
-        }
-    }
-}
+            archiveArtifacts artifac
