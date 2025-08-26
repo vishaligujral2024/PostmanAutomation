@@ -1,11 +1,13 @@
 pipeline {
     agent any
+
     tools {
-        NodeJS "NodeJS"      }
+        NodeJS "NodeJS_16"   // your configured NodeJS in Jenkins
+    }
 
     parameters {
-        choice(name: 'COLLECTION', choices: ['CreditCard.postman_collection.json', 'ACH.postman_collection.json'], description: 'Select Postman collection to run')
-        choice(name: 'ENVIRONMENT', choices: ['Dev.postman_environment.json', 'QA.postman_environment.json'], description: 'Select Postman environment to run')
+        choice(name: 'COLLECTION', choices: ['Credit Card Processing - Back Office', 'ACH Collection'], description: 'Select Postman collection to run')
+        choice(name: 'ENVIRONMENT', choices: ['SuitePayments - Visa - Release QA'], description: 'Select Postman environment')
     }
 
     stages {
@@ -15,20 +17,30 @@ pipeline {
             }
         }
 
-        stage('Run Postman Collection') {
+        stage('Checkout') {
             steps {
-                script {
-                    // Run Newman once with allure reporter
-                    sh """
-                        newman run "${params.COLLECTION}" \
-                        -e "${params.ENVIRONMENT}" \
-                        -r allure --reporter-allure-export "allure-results"
-                    """
-                }
+                git branch: 'main', url: 'https://github.com/your-repo-url.git'
             }
         }
 
-        stage('Generate Allure Report') {
+        stage('Install Newman & Reporters') {
+            steps {
+                sh 'npm install -g newman newman-reporter-allure'
+            }
+        }
+
+        stage('Run Postman Tests') {
+            steps {
+                sh """
+                    npx newman run "collections/${params.COLLECTION}.postman_collection.json" \
+                    -e "environments/${params.ENVIRONMENT}.postman_environment.json" \
+                    --reporters cli,allure \
+                    --reporter-allure-export "allure-results"
+                """
+            }
+        }
+
+        stage('Allure Report') {
             steps {
                 allure([
                     includeProperties: false,
@@ -41,7 +53,7 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts artifacts: '**/allure-report/**', allowEmptyArchive: true
+            archiveArtifacts artifacts: '**/allure-results/**', allowEmptyArchive: true
         }
     }
 }
