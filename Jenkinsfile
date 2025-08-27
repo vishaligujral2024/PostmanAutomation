@@ -1,43 +1,47 @@
 pipeline {
     agent any
+
+    tools {
+        nodejs "NodeJS_16"   // Your NodeJS tool name in Jenkins
+    }
+
     parameters {
-        string(
+        choice(
             name: 'COLLECTION',
-            defaultValue: '',
-            description: 'Enter the collection JSON file name from /collections directory'
+            choices: [
+                'Credit Card Processing - Back Office.postman_collection.json',
+                'ACH Processing - Back Office.postman_collection.json'
+            ],
+            description: 'Select Postman collection to run'
         )
-        string(
+        choice(
             name: 'ENVIRONMENT',
-            defaultValue: '',
-            description: 'Enter the environment JSON file name from /environments directory'
+            choices: [
+                'SuitePayments - Visa - Release QA.postman_environment.json',
+                'SuitePayments - MasterCard - Release QA.postman_environment.json'
+            ],
+            description: 'Select Postman environment to run'
         )
     }
+
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/vishaligujral2024/PostmanAutomation.git'
-            }
-        }
-
-        stage('List Available Files') {
-            steps {
-                script {
-                    echo "Available Collections:"
-                    bat "dir collections\\*.json"
-                    
-                    echo "Available Environments:"
-                    bat "dir environments\\*.json"
-                }
+                git branch: 'main',
+                    url: 'https://github.com/vishaligujral2024/PostmanAutomation.git'
             }
         }
 
         stage('Run Newman Tests') {
             steps {
-                bat """
-                    npx newman run "collections/${COLLECTION}" \
-                    -e "environments/${ENVIRONMENT}" \
-                    -r cli,allure --reporter-allure-export "allure-results"
-                """
+                script {
+                    // Run Newman with Allure reporter
+                    bat """
+                        npx newman run "collections/${params.COLLECTION}" \
+                        -e "environments/${params.ENVIRONMENT}" \
+                        -r cli,allure --reporter-allure-export "allure-results"
+                    """
+                }
             }
         }
 
@@ -45,6 +49,16 @@ pipeline {
             steps {
                 allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
             }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
+        }
+        unsuccessful {
+            // Make build red if Newman test fails
+            error("Some Newman tests failed. Check Allure report for details.")
         }
     }
 }
