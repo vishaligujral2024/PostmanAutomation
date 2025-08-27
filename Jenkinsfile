@@ -1,16 +1,31 @@
 pipeline {
     agent any
 
-    parameters {
-        choice(name: 'COLLECTION', choices: sh(script: 'ls collections/*.json', returnStdout: true).trim().split('\n'), description: 'Select Postman Collection')
-        choice(name: 'ENVIRONMENT', choices: sh(script: 'ls environments/*.json', returnStdout: true).trim().split('\n'), description: 'Select Postman Environment')
+    tools {
+        NodeJS "NodeJS_16"   // your configured NodeJS tool in Jenkins
     }
 
-    tools {
-        NodeJS "NodeJS"   // your configured NodeJS installation in Jenkins
+    parameters {
+        choice(name: 'COLLECTION', choices: sh(
+            script: "ls collections/*.json",
+            returnStdout: true
+        ).trim().split("\\n"),
+        description: 'Select Postman Collection')
+
+        choice(name: 'ENVIRONMENT', choices: sh(
+            script: "ls environments/*.json",
+            returnStdout: true
+        ).trim().split("\\n"),
+        description: 'Select Postman Environment')
     }
 
     stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
         stage('Checkout') {
             steps {
                 git branch: 'main',
@@ -21,28 +36,31 @@ pipeline {
         stage('Run Newman Tests') {
             steps {
                 script {
-                    // Cleanup allure-results if any left over from older runs
-                    bat '''
-                        rmdir /s /q allure-results || echo no allure-results
-                        mkdir allure-results
-                        npx newman run "%WORKSPACE%/collections/${params.COLLECTION}" ^
-                            -e "%WORKSPACE%/environments/${params.ENVIRONMENT}" ^
-                            -r cli,allure --reporter-allure-export "allure-results/build-%BUILD_NUMBER%"
-                    '''
+                    def resultsDir = "allure-results/build-${env.BUILD_NUMBER}"
+
+                    // Full clean to avoid duplicates
+                    bat """
+                        rmdir /s /q allure-results || echo "no old allure-results"
+                        mkdir "${resultsDir}"
+                        npx newman run "%WORKSPACE%/${params.COLLECTION}" ^
+                            -e "%WORKSPACE%/${params.ENVIRONMENT}" ^
+                            -r cli,allure --reporter-allure-export "${resultsDir}"
+                        rmdir /s /q "${resultsDir}\\.history" || echo "no history folder"
+                    """
                 }
             }
         }
 
         stage('Allure Report') {
             steps {
-                allure includeProperties: true, jdk: '', results: [[path: "allure-results/build-${env.BUILD_NUMBER}"]]
+                allure includeProperties: false, jdk: '', results: [[path: "allure-results/build-${env.BUILD_NUMBER}"]]
             }
         }
     }
 
     post {
         always {
-            archiveArtifacts artifacts: 'allure-report/**', fingerprint: true
+            archiveArtifacts artifacts: 'allure-results/**, allure-report/**', allowEmptyArchive: true
         }
     }
 }
