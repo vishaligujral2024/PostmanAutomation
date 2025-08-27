@@ -1,60 +1,58 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs "NodeJS"
-    }
-
     parameters {
-        choice(name: 'COLLECTION', choices: getFileList('collections'), description: 'Select Postman Collection')
-        choice(name: 'ENVIRONMENT', choices: getFileList('environments'), description: 'Select Postman Environment')
+        choice(name: 'COLLECTION', choices: sh(script: "ls collections/*.json", returnStdout: true).trim().split("\n"), description: 'Select Postman collection')
+        choice(name: 'ENVIRONMENT', choices: sh(script: "ls environments/*.json", returnStdout: true).trim().split("\n"), description: 'Select Postman environment')
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/vishaligujral2024/PostmanAutomation.git'
+                git branch: 'main',
+                    url: 'https://github.com/vishaligujral2024/PostmanAutomation.git'
+            }
+        }
+
+        stage('Clean Workspace') {
+            steps {
+                script {
+                    // Ensure no duplicate reports stick between builds
+                    if (isUnix()) {
+                        sh 'rm -rf newman-report.html newman newman/*.json'
+                    } else {
+                        bat 'if exist newman-report.html del /f /q newman-report.html'
+                        bat 'if exist newman rmdir /s /q newman'
+                    }
+                }
             }
         }
 
         stage('Run Newman Tests') {
             steps {
-                bat """
-                    set RESULTS_DIR=allure-results-%BUILD_NUMBER%
-                    if exist %RESULTS_DIR% rmdir /s /q %RESULTS_DIR%
-                    npx newman run "%WORKSPACE%/${params.COLLECTION}" ^
-                        -e "%WORKSPACE%/${params.ENVIRONMENT}" ^
-                        -r cli,allure --reporter-allure-export "%RESULTS_DIR%" ^
-                        --suppress-exit-code 1
-                """
-            }
-        }
-
-        stage('Generate Allure Report') {
-            steps {
-                allure([
-                    includeProperties: false,
-                    jdk: '',
-                    results: [[path: "allure-results-%BUILD_NUMBER%"]]
-                ])
+                script {
+                    // Run tests with htmlextra reporter
+                    def status = bat(
+                        script: """
+                            npx newman run "%WORKSPACE%/${params.COLLECTION}" ^
+                                -e "%WORKSPACE%/${params.ENVIRONMENT}" ^
+                                -r cli,htmlextra --reporter-htmlextra-export newman-report.html
+                        """,
+                        returnStatus: true
+                    )
+                    
+                    // Fail the build if Newman had failures
+                    if (status != 0) {
+                        currentBuild.result = 'FAILURE'
+                    }
+                }
             }
         }
     }
 
     post {
         always {
-            archiveArtifacts artifacts: 'allure-results-%BUILD_NUMBER%/**', fingerprint: true
+            archiveArtifacts artifacts: 'newman-report.html', fingerprint: true
         }
     }
-}
-
-@NonCPS
-def getFileList(folder) {
-    def files = []
-    new File(folder).eachFile { file ->
-        if (file.name.endsWith('.json')) {
-            files << "${folder}/${file.name}"
-        }
-    }
-    return files.join('\n')
 }
