@@ -1,50 +1,17 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs "NodeJS"
+    environment {
+        COLLECTION_DIR = "collections"
+        ENVIRONMENT_DIR = "environments"
     }
 
     parameters {
-        choice(
-            name: 'COLLECTION',
-            choices: ['placeholder'],  // dummy
-            description: 'Select Postman collection to run'
-        )
-        choice(
-            name: 'ENVIRONMENT',
-            choices: ['placeholder'],  // dummy
-            description: 'Select Postman environment to run'
-        )
+        string(name: 'COLLECTION', defaultValue: '', description: 'Enter collection JSON file name (auto-discovered)')
+        string(name: 'ENVIRONMENT', defaultValue: '', description: 'Enter environment JSON file name (auto-discovered)')
     }
 
     stages {
-        stage('Setup Parameters') {
-            steps {
-                script {
-                    // List collections on Windows
-                    def collections = bat(
-                        script: 'dir /b collections\\*.json',
-                        returnStdout: true
-                    ).trim().split("\r?\n")
-
-                    // List environments on Windows
-                    def environments = bat(
-                        script: 'dir /b environments\\*.json',
-                        returnStdout: true
-                    ).trim().split("\r?\n")
-
-                    // Update Jenkins build params dynamically
-                    properties([
-                        parameters([
-                            choice(name: 'COLLECTION', choices: collections.join('\n'), description: 'Select Postman collection'),
-                            choice(name: 'ENVIRONMENT', choices: environments.join('\n'), description: 'Select Postman environment')
-                        ])
-                    ])
-                }
-            }
-        }
-
         stage('Checkout') {
             steps {
                 git branch: 'main',
@@ -52,11 +19,43 @@ pipeline {
             }
         }
 
+        stage('Discover Files') {
+            steps {
+                script {
+                    def collections = sh(
+                        script: "ls ${COLLECTION_DIR}/*.json",
+                        returnStdout: true
+                    ).trim().split("\n")
+
+                    def environments = sh(
+                        script: "ls ${ENVIRONMENT_DIR}/*.json",
+                        returnStdout: true
+                    ).trim().split("\n")
+
+                    echo "Available collections: ${collections}"
+                    echo "Available environments: ${environments}"
+
+                    // If user didn't pass manually, pick the first available
+                    if (!params.COLLECTION?.trim()) {
+                        env.COLLECTION = collections[0]
+                    } else {
+                        env.COLLECTION = params.COLLECTION
+                    }
+
+                    if (!params.ENVIRONMENT?.trim()) {
+                        env.ENVIRONMENT = environments[0]
+                    } else {
+                        env.ENVIRONMENT = params.ENVIRONMENT
+                    }
+                }
+            }
+        }
+
         stage('Run Newman Tests') {
             steps {
                 bat """
-                    npx newman run "collections\\${params.COLLECTION}" ^
-                        -e "environments\\${params.ENVIRONMENT}" ^
+                    npx newman run "${env.COLLECTION}" \
+                        -e "${env.ENVIRONMENT}" \
                         -r cli,allure --reporter-allure-export "allure-results"
                 """
             }
@@ -64,21 +63,19 @@ pipeline {
 
         stage('Allure Report') {
             steps {
-                allure([
-                    includeProperties: false,
-                    jdk: '',
-                    results: [[path: "allure-results"]]
-                ])
+                allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
             }
         }
     }
 
     post {
         always {
-            archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
+            archiveArtifacts artifacts: '**/allure-results/*', allowEmptyArchive: true
         }
-        unsuccessful {
-            echo "Build failed but Allure report still generated!"
+        failure {
+            script {
+                currentBuild.result = 'FAILURE'
+            }
         }
     }
 }
