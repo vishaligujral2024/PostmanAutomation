@@ -30,7 +30,7 @@ pipeline {
                             -r cli,allure --reporter-allure-export "allure-results"
                         """
                     } catch (Exception err) {
-                        // Capture Newman failure, don’t stop pipeline yet
+                        // Mark build unstable so Allure report still runs
                         currentBuild.result = 'UNSTABLE'
                     }
                 }
@@ -52,7 +52,7 @@ Environment=${params.ENVIRONMENT}
         stage('Allure Report') {
             steps {
                 script {
-                    // Preserve test history for trend
+                    // Preserve test history
                     if (fileExists("allure-report/history")) {
                         dir("allure-results") {
                             bat "xcopy ..\\allure-report\\history history /E /I /Y"
@@ -69,12 +69,14 @@ Environment=${params.ENVIRONMENT}
             archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
         }
         failure {
-            echo "Some Newman tests failed. Check Allure report for details."
+            echo " Newman tests failed. See Allure report."
         }
         unstable {
-            echo "Some Newman tests failed. Build marked as UNSTABLE but report generated."
-            // Force build to red if you want failure instead of unstable
-            currentBuild.result = 'FAILURE'
+            echo " Some Newman tests failed. Build marked as UNSTABLE but report generated."
+            script {
+                // Force build to red if you don’t want yellow
+                currentBuild.result = 'FAILURE'
+            }
         }
     }
 }
