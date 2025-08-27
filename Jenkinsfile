@@ -10,7 +10,6 @@ pipeline {
             ],
             description: 'Select Postman Collection to run'
         )
-
         choice(
             name: 'ENVIRONMENT',
             choices: [
@@ -33,7 +32,7 @@ pipeline {
                 bat """
                 npx newman run "collections/${COLLECTION}" ^
                   -e "environments/${ENVIRONMENT}" ^
-                  -r cli,allure --reporter-allure-export "allure-results"
+                  -r cli,allure --reporter-allure-export "%WORKSPACE%\\allure-results"
                 """
             }
         }
