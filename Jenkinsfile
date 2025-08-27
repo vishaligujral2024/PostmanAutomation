@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        NodeJS "NodeJS_16"   // your configured NodeJS tool in Jenkins
+        NodeJS "NodeJS_16"
     }
 
     parameters {
@@ -23,6 +23,10 @@ pipeline {
         stage('Clean Workspace') {
             steps {
                 cleanWs()
+                bat """
+                    rmdir /s /q allure-results || echo "no allure-results"
+                    rmdir /s /q allure-report || echo "no allure-report"
+                """
             }
         }
 
@@ -36,16 +40,13 @@ pipeline {
         stage('Run Newman Tests') {
             steps {
                 script {
-                    def resultsDir = "allure-results/build-${env.BUILD_NUMBER}"
-
-                    // Full clean to avoid duplicates
+                    def resultsDir = "allure-results"
                     bat """
-                        rmdir /s /q allure-results || echo "no old allure-results"
                         mkdir "${resultsDir}"
                         npx newman run "%WORKSPACE%/${params.COLLECTION}" ^
                             -e "%WORKSPACE%/${params.ENVIRONMENT}" ^
                             -r cli,allure --reporter-allure-export "${resultsDir}"
-                        rmdir /s /q "${resultsDir}\\.history" || echo "no history folder"
+                        rmdir /s /q "${resultsDir}\\.history" || echo "no history"
                     """
                 }
             }
@@ -53,7 +54,8 @@ pipeline {
 
         stage('Allure Report') {
             steps {
-                allure includeProperties: false, jdk: '', results: [[path: "allure-results/build-${env.BUILD_NUMBER}"]]
+                allure includeProperties: false, jdk: '', results: [[path: "allure-results"]],
+                       reusePreviousBuild: false
             }
         }
     }
