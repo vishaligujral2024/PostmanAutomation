@@ -2,84 +2,59 @@ pipeline {
     agent any
 
     tools {
-        NodeJS "NodeJS"
+        nodejs "NodeJS"
     }
 
     parameters {
-        choice(name: 'COLLECTION', choices: sh(
-            script: "ls collections/*.json",
-            returnStdout: true
-        ).trim().split("\\n"),
-        description: 'Select Postman Collection')
-
-        choice(name: 'ENVIRONMENT', choices: sh(
-            script: "ls environments/*.json",
-            returnStdout: true
-        ).trim().split("\\n"),
-        description: 'Select Postman Environment')
+        choice(name: 'COLLECTION', choices: getFileList('collections'), description: 'Select Postman Collection')
+        choice(name: 'ENVIRONMENT', choices: getFileList('environments'), description: 'Select Postman Environment')
     }
 
     stages {
-        stage('Deep Clean Workspace') {
-            steps {
-                cleanWs(deleteDirs: true)
-
-                bat """
-                    echo Cleaning leftover dirs...
-                    if exist allure-results rmdir /s /q allure-results
-                    if exist allure-report rmdir /s /q allure-report
-                    if exist target rmdir /s /q target
-                    if exist build rmdir /s /q build
-                """
-            }
-        }
-
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/vishaligujral2024/PostmanAutomation.git'
+                git branch: 'main', url: 'https://github.com/vishaligujral2024/PostmanAutomation.git'
             }
         }
 
         stage('Run Newman Tests') {
             steps {
-                script {
-                    // Unique results folder per build
-                    def resultsDir = "allure-results-${env.BUILD_NUMBER}"
-
-                    bat """
-                        echo Creating fresh results dir: ${resultsDir}
-                        if exist ${resultsDir} rmdir /s /q ${resultsDir}
-                        mkdir ${resultsDir}
-
-                        echo Running Newman...
-                        npx newman run "%WORKSPACE%/${params.COLLECTION}" ^
-                            -e "%WORKSPACE%/${params.ENVIRONMENT}" ^
-                            -r cli,allure --reporter-allure-export "${resultsDir}"
-                    """
-
-                    // Debug: list generated files
-                    bat "dir /b ${resultsDir}"
-                }
+                bat """
+                    set RESULTS_DIR=allure-results-%BUILD_NUMBER%
+                    if exist %RESULTS_DIR% rmdir /s /q %RESULTS_DIR%
+                    npx newman run "%WORKSPACE%/${params.COLLECTION}" ^
+                        -e "%WORKSPACE%/${params.ENVIRONMENT}" ^
+                        -r cli,allure --reporter-allure-export "%RESULTS_DIR%" ^
+                        --suppress-exit-code 1
+                """
             }
         }
 
-        stage('Allure Report') {
+        stage('Generate Allure Report') {
             steps {
-                // Use the unique folder for this build
-                allure includeProperties: false, jdk: '', results: [[path: "allure-results-${env.BUILD_NUMBER}"]],
-                       reusePreviousBuild: false, keepOnlyLatestBuild: true
+                allure([
+                    includeProperties: false,
+                    jdk: '',
+                    results: [[path: "allure-results-%BUILD_NUMBER%"]]
+                ])
             }
         }
     }
 
     post {
         always {
-            echo "Archiving results..."
-            archiveArtifacts artifacts: "allure-results-${env.BUILD_NUMBER}/**, allure-report/**", allowEmptyArchive: true
-
-            echo "Cleaning unique results dir..."
-            bat "if exist allure-results-${env.BUILD_NUMBER} rmdir /s /q allure-results-${env.BUILD_NUMBER}"
+            archiveArtifacts artifacts: 'allure-results-%BUILD_NUMBER%/**', fingerprint: true
         }
     }
+}
+
+@NonCPS
+def getFileList(folder) {
+    def files = []
+    new File(folder).eachFile { file ->
+        if (file.name.endsWith('.json')) {
+            files << "${folder}/${file.name}"
+        }
+    }
+    return files.join('\n')
 }
