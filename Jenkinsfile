@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs "NodeJS_16"   // Your NodeJS tool name in Jenkins
+        nodejs "NodeJS"   
     }
 
     parameters {
