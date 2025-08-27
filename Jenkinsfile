@@ -8,12 +8,12 @@ pipeline {
     parameters {
         choice(
             name: 'COLLECTION',
-            choices: ['placeholder'],  // dummy choice
+            choices: ['placeholder'],  // dummy
             description: 'Select Postman collection to run'
         )
         choice(
             name: 'ENVIRONMENT',
-            choices: ['placeholder'],  // dummy choice
+            choices: ['placeholder'],  // dummy
             description: 'Select Postman environment to run'
         )
     }
@@ -22,23 +22,23 @@ pipeline {
         stage('Setup Parameters') {
             steps {
                 script {
-                    // Dynamically list all available collections
-                    def collections = sh(
-                        script: "ls collections/*.json | xargs -n 1 basename",
+                    // List collections on Windows
+                    def collections = bat(
+                        script: 'dir /b collections\\*.json',
                         returnStdout: true
-                    ).trim().split("\n")
+                    ).trim().split("\r?\n")
 
-                    // Dynamically list all environments
-                    def environments = sh(
-                        script: "ls environments/*.json | xargs -n 1 basename",
+                    // List environments on Windows
+                    def environments = bat(
+                        script: 'dir /b environments\\*.json',
                         returnStdout: true
-                    ).trim().split("\n")
+                    ).trim().split("\r?\n")
 
-                    // Update build parameters dynamically
+                    // Update Jenkins build params dynamically
                     properties([
                         parameters([
-                            choice(name: 'COLLECTION', choices: collections, description: 'Select Postman collection'),
-                            choice(name: 'ENVIRONMENT', choices: environments, description: 'Select Postman environment')
+                            choice(name: 'COLLECTION', choices: collections.join('\n'), description: 'Select Postman collection'),
+                            choice(name: 'ENVIRONMENT', choices: environments.join('\n'), description: 'Select Postman environment')
                         ])
                     ])
                 }
@@ -55,8 +55,8 @@ pipeline {
         stage('Run Newman Tests') {
             steps {
                 bat """
-                    npx newman run "collections/${params.COLLECTION}" ^
-                        -e "environments/${params.ENVIRONMENT}" ^
+                    npx newman run "collections\\${params.COLLECTION}" ^
+                        -e "environments\\${params.ENVIRONMENT}" ^
                         -r cli,allure --reporter-allure-export "allure-results"
                 """
             }
