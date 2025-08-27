@@ -1,45 +1,25 @@
-properties([
-  parameters([
-    // Dynamic collection dropdown
-    [$class: 'ChoiceParameter',
-      name: 'COLLECTION',
-      choiceType: 'PT_SINGLE_SELECT',
-      description: 'Select Postman Collection to run',
-      script: [$class: 'GroovyScript',
-        script: [classpath: [], sandbox: true, script: '''
-          def dir = new File("${WORKSPACE}/collections")
-          if (!dir.exists()) return ["No collections found"]
-          return dir.listFiles()
-                   .findAll { it.name.endsWith(".json") }
-                   .collect { it.name }
-                   .sort()
-        '''],
-        fallbackScript: [classpath: [], sandbox: true, script: 'return ["Error"]']
-      ]
-    ],
-
-    // Dynamic environment dropdown
-    [$class: 'ChoiceParameter',
-      name: 'ENVIRONMENT',
-      choiceType: 'PT_SINGLE_SELECT',
-      description: 'Select Postman Environment to run',
-      script: [$class: 'GroovyScript',
-        script: [classpath: [], sandbox: true, script: '''
-          def dir = new File("${WORKSPACE}/environments")
-          if (!dir.exists()) return ["No environments found"]
-          return dir.listFiles()
-                   .findAll { it.name.endsWith(".json") }
-                   .collect { it.name }
-                   .sort()
-        '''],
-        fallbackScript: [classpath: [], sandbox: true, script: 'return ["Error"]']
-      ]
-    ]
-  ])
-])
-
 pipeline {
     agent any
+
+    parameters {
+        choice(
+            name: 'COLLECTION',
+            choices: [
+                'ACH Processing - Back Office.postman_collection.json',
+                'Credit Card Processing - Back Office.postman_collection.json'
+            ],
+            description: 'Select Postman Collection to run'
+        )
+
+        choice(
+            name: 'ENVIRONMENT',
+            choices: [
+                'SuitePayments - Visa - Release QA.postman_environment.json',
+                'SuitePayments - Visa - UAT - Vishali.postman_environment.json'
+            ],
+            description: 'Select Postman Environment to run'
+        )
+    }
 
     stages {
         stage('Checkout') {
