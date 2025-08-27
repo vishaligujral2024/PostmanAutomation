@@ -1,82 +1,102 @@
 pipeline {
-    agent any
+  agent any
 
-    parameters {
-        choice(name: 'COLLECTION', choices: [
-            'Credit Card Processing - Back Office.postman_collection.json',
-            'ACH Processing - Back Office.postman_collection.json'
-        ], description: 'Select Postman collection to run')
+  tools {
+    
+    nodejs 'NodeJS'
+  }
 
-        choice(name: 'ENVIRONMENT', choices: [
-            'SuitePayments - Visa - Release QA.postman_environment.json',
-            'SuitePayments - MasterCard - Release QA.postman_environment.json'
-        ], description: 'Select Postman environment to use')
+  options {
+    timestamps()
+    ansiColor('xterm')
+    buildDiscarder(logRotator(numToKeepStr: '25'))
+  }
+
+  parameters {
+    // <-- Edit these lists when you add new files
+    choice(
+      name: 'COLLECTION',
+      choices: [
+        'ACH Processing - Back Office.postman_collection.json',
+        'Credit Card Processing - Back Office.postman_collection.json'
+      ],
+      description: 'Select Postman collection to run'
+    )
+    choice(
+      name: 'ENVIRONMENT',
+      choices: [
+        'SuitePayments - Visa - Release QA.postman_environment.json',
+        'SuitePayments - Visa - UAT - Vishali.postman_environment'
+      ],
+      description: 'Select Postman environment to use'
+    )
+  }
+
+  stages {
+
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
     }
 
-    stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main', url: 'https://github.com/vishaligujral2024/PostmanAutomation.git'
-            }
-        }
+    stage('Prep Workspace & Reporter') {
+      steps {
+        bat '''
+          if exist "allure-results" rd /s /q "allure-results"
+          if exist "allure-report"  rd /s /q "allure-report"
+          mkdir "allure-results"
 
-        stage('Run Newman Tests') {
-            steps {
-                script {
-                    try {
-                       bat """
-    npx newman run ^"collections/${params.COLLECTION}^" ^
-    -e ^"environments/${params.ENVIRONMENT}^" ^
-    -r cli,allure --reporter-allure-export ^"allure-results^"
-"""
-                    } catch (Exception err) {
-                        // Mark build unstable so Allure report still runs
-                        currentBuild.result = 'UNSTABLE'
-                    }
-                }
-            }
-        }
-
-        stage('Add Environment Info') {
-            steps {
-                script {
-                    writeFile file: 'allure-results/environment.properties', text: """
-Build_URL=${env.BUILD_URL}
-Collection=${params.COLLECTION}
-Environment=${params.ENVIRONMENT}
-"""
-                }
-            }
-        }
-
-        stage('Allure Report') {
-            steps {
-                script {
-                    // Preserve test history
-                    if (fileExists("allure-report/history")) {
-                        dir("allure-results") {
-                            bat "xcopy ..\\allure-report\\history history /E /I /Y"
-                        }
-                    }
-                }
-                allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
-            }
-        }
+          if not exist package.json (echo {}>package.json)
+          call npm config set fund false
+          call npm config set audit false
+          rem Ensure allure reporter is available to newman (local install in workspace)
+          call npm i newman-reporter-allure --no-audit --silent
+        '''
+      }
     }
 
-    post {
-        always {
-            archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
+    stage('Run Newman Tests') {
+      steps {
+        script {
+          def collectionPath  = "collections/${params.COLLECTION}"
+          def environmentPath = "environments/${params.ENVIRONMENT}"
+
+          // Write Allure environment info (for the Environment tab + trend context)
+          bat """
+            >  "allure-results\\environment.properties" echo BUILD_URL=%BUILD_URL%
+            >> "allure-results\\environment.properties" echo JOB_NAME=%JOB_NAME%
+            >> "allure-results\\environment.properties" echo BUILD_NUMBER=%BUILD_NUMBER%
+            >> "allure-results\\environment.properties" echo NODE_NAME=%NODE_NAME%
+            >> "allure-results\\environment.properties" echo COLLECTION=${params.COLLECTION}
+            >> "allure-results\\environment.properties" echo ENVIRONMENT=${params.ENVIRONMENT}
+          """
+
+          // Run ONLY the selected collection
+          bat """
+            npx newman run "${collectionPath}" -e "${environmentPath}" -r cli,allure --reporter-allure-export "allure-results"
+          """
+          // NOTE: If any test fails, newman exits non-zero and this stage fails (good).
         }
-        failure {
-            echo " Newman tests failed. See Allure report."
-        }
-        unstable {
-            echo " Some Newman tests failed. Build marked as UNSTABLE but report generated."
-            script {
-                // Force build to red if you don’t want yellow
-                currentBuild.result = 'FAILURE'
-            }
-        }
+      }
     }
+  }
+
+  post {
+    // Always publish Allure, even if tests failed or the stage errored out
+    always {
+      allure([
+        includeProperties: false,
+        jdk: '',
+        results: [[path: 'allure-results']]
+      ])
+      archiveArtifacts artifacts: 'allure-results/**', fingerprint: true, allowEmptyArchive: true
+    }
+    success {
+      echo ' Newman tests passed.'
+    }
+    failure {
+      echo ' Newman tests failed. See the Allure report above.'
+    }
+  }
 }
