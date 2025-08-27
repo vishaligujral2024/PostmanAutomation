@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        NodeJS "NodeJS"   // your configured NodeJS tool in Jenkins
+        NodeJS "NodeJS"   // your configured NodeJS installation
     }
 
     options {
@@ -12,48 +12,53 @@ pipeline {
     }
 
     parameters {
-        // Placeholder – actual values will be set dynamically in the first stage
-        choice(name: 'COLLECTION', choices: ['dummy'], description: 'Select which Postman Collection to run')
-        choice(name: 'ENVIRONMENT', choices: ['dummy'], description: 'Select which Environment to use')
+        choice(name: 'COLLECTION', choices: ['default_collection.json'], description: 'Select Postman Collection')
+        choice(name: 'ENVIRONMENT', choices: ['default_environment.json'], description: 'Select Environment')
+        booleanParam(name: 'REFRESH_PARAMS', defaultValue: false, description: 'Check to refresh available parameters')
     }
 
     stages {
-        stage('Prepare Parameters') {
+        stage('Checkout & Hard Clean') {
+            steps {
+                cleanWs()  // Jenkins plugin cleanup
+                git branch: 'main', url: 'https://github.com/vishaligujral2024/PostmanAutomation.git'
+
+                bat '''
+                    echo === HARD CLEAN START ===
+                    if exist allure-results rmdir /s /q allure-results
+                    if exist allure-report rmdir /s /q allure-report
+                    if exist node_modules rmdir /s /q node_modules
+                    if exist package-lock.json del /f /q package-lock.json
+                    if exist .newman rmdir /s /q .newman
+                    echo === HARD CLEAN END ===
+                '''
+            }
+        }
+
+        stage('Prepare Parameters (optional refresh)') {
+            when {
+                expression { return params.REFRESH_PARAMS?.toBoolean() }
+            }
             steps {
                 script {
-                    // Read collection files dynamically
-                    def collections = sh(
-                        script: "ls collections/*.json",
+                    def collections = bat(
+                        script: 'dir /b collections\\*.json',
                         returnStdout: true
-                    ).trim().split("\n")*.replaceAll(/^collections[\\\\/]/, '')
+                    ).trim().split("\r?\n")
 
-                    // Read environment files dynamically
-                    def environments = sh(
-                        script: "ls environments/*.json",
+                    def environments = bat(
+                        script: 'dir /b environments\\*.json',
                         returnStdout: true
-                    ).trim().split("\n")*.replaceAll(/^environments[\\\\/]/, '')
+                    ).trim().split("\r?\n")
 
-                    // Update parameters
                     properties([
                         parameters([
-                            choice(name: 'COLLECTION', choices: collections, description: 'Select which Postman Collection to run'),
-                            choice(name: 'ENVIRONMENT', choices: environments, description: 'Select which Environment to use')
+                            choice(name: 'COLLECTION', choices: collections, description: 'Select Postman Collection'),
+                            choice(name: 'ENVIRONMENT', choices: environments, description: 'Select Environment'),
+                            booleanParam(name: 'REFRESH_PARAMS', defaultValue: false, description: 'Check to refresh available parameters')
                         ])
                     ])
                 }
-            }
-        }
-
-        stage('Clean Workspace') {
-            steps {
-                cleanWs()
-            }
-        }
-
-        stage('Checkout') {
-            steps {
-                git branch: 'main',
-                    url: 'https://github.com/vishaligujral2024/PostmanAutomation.git'
             }
         }
 
@@ -61,25 +66,14 @@ pipeline {
             steps {
                 bat '''
                     echo ===============================
-                    echo Cleaning old Allure results
-                    echo ===============================
-                    if exist allure-results (
-                        rmdir /s /q allure-results
-                    )
-                    if exist allure-report (
-                        rmdir /s /q allure-report
-                    )
-
-                    echo ===============================
-                    echo Running ONLY this collection:
-                    echo ${params.COLLECTION}
-                    echo Using environment:
-                    echo ${params.ENVIRONMENT}
+                    echo Running collection: ${params.COLLECTION}
+                    echo Using environment: ${params.ENVIRONMENT}
                     echo ===============================
 
                     npx newman run "collections\\${params.COLLECTION}" ^
                         -e "environments\\${params.ENVIRONMENT}" ^
-                        -r cli,allure --reporter-allure-export "allure-results"
+                        -r cli,allure --reporter-allure-export "allure-results" ^
+                        --disable-unicode
                 '''
             }
         }
@@ -108,6 +102,15 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
+        }
+        cleanup {
+            bat '''
+                echo === FINAL CLEANUP ===
+                if exist allure-results rmdir /s /q allure-results
+                if exist allure-report rmdir /s /q allure-report
+                if exist .newman rmdir /s /q .newman
+                echo === CLEANUP COMPLETE ===
+            '''
         }
     }
 }
