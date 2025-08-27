@@ -24,11 +24,11 @@ pipeline {
             steps {
                 script {
                     try {
-                        bat """
-                            npx newman run "collections/${params.COLLECTION}" ^
-                            -e "environments/${params.ENVIRONMENT}" ^
-                            -r cli,allure --reporter-allure-export "allure-results"
-                        """
+                       bat """
+    npx newman run ^"collections/${params.COLLECTION}^" ^
+    -e ^"environments/${params.ENVIRONMENT}^" ^
+    -r cli,allure --reporter-allure-export ^"allure-results^"
+"""
                     } catch (Exception err) {
                         // Mark build unstable so Allure report still runs
                         currentBuild.result = 'UNSTABLE'
