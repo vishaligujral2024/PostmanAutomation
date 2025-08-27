@@ -20,12 +20,16 @@ pipeline {
     }
 
     stages {
-        stage('Clean Workspace') {
+        stage('Deep Clean Workspace') {
             steps {
-                cleanWs()
+                cleanWs(deleteDirs: true)
+
                 bat """
-                    rmdir /s /q allure-results || echo "no allure-results"
-                    rmdir /s /q allure-report || echo "no allure-report"
+                    echo Cleaning leftover dirs...
+                    if exist allure-results rmdir /s /q allure-results
+                    if exist allure-report rmdir /s /q allure-report
+                    if exist target rmdir /s /q target
+                    if exist build rmdir /s /q build
                 """
             }
         }
@@ -40,29 +44,42 @@ pipeline {
         stage('Run Newman Tests') {
             steps {
                 script {
-                    def resultsDir = "allure-results"
+                    // Unique results folder per build
+                    def resultsDir = "allure-results-${env.BUILD_NUMBER}"
+
                     bat """
-                        mkdir "${resultsDir}"
+                        echo Creating fresh results dir: ${resultsDir}
+                        if exist ${resultsDir} rmdir /s /q ${resultsDir}
+                        mkdir ${resultsDir}
+
+                        echo Running Newman...
                         npx newman run "%WORKSPACE%/${params.COLLECTION}" ^
                             -e "%WORKSPACE%/${params.ENVIRONMENT}" ^
                             -r cli,allure --reporter-allure-export "${resultsDir}"
-                        rmdir /s /q "${resultsDir}\\.history" || echo "no history"
                     """
+
+                    // Debug: list generated files
+                    bat "dir /b ${resultsDir}"
                 }
             }
         }
 
         stage('Allure Report') {
             steps {
-                allure includeProperties: false, jdk: '', results: [[path: "allure-results"]],
-                       reusePreviousBuild: false
+                // Use the unique folder for this build
+                allure includeProperties: false, jdk: '', results: [[path: "allure-results-${env.BUILD_NUMBER}"]],
+                       reusePreviousBuild: false, keepOnlyLatestBuild: true
             }
         }
     }
 
     post {
         always {
-            archiveArtifacts artifacts: 'allure-results/**, allure-report/**', allowEmptyArchive: true
+            echo "Archiving results..."
+            archiveArtifacts artifacts: "allure-results-${env.BUILD_NUMBER}/**, allure-report/**", allowEmptyArchive: true
+
+            echo "Cleaning unique results dir..."
+            bat "if exist allure-results-${env.BUILD_NUMBER} rmdir /s /q allure-results-${env.BUILD_NUMBER}"
         }
     }
 }
