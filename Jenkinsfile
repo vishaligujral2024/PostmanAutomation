@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     tools {
-        nodejs "NodeJS"   
-    }
+        nodejs "NodeJS_"     
+}
 
     parameters {
         choice(
@@ -35,7 +35,6 @@ pipeline {
         stage('Run Newman Tests') {
             steps {
                 script {
-                    // Run Newman with Allure reporter
                     bat """
                         npx newman run "collections/${params.COLLECTION}" \
                         -e "environments/${params.ENVIRONMENT}" \
@@ -57,7 +56,6 @@ pipeline {
             archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
         }
         unsuccessful {
-            // Make build red if Newman test fails
             error("Some Newman tests failed. Check Allure report for details.")
         }
     }
