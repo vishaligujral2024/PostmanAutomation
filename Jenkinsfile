@@ -2,55 +2,52 @@ pipeline {
     agent any
 
     parameters {
-        choice(
-            name: 'COLLECTION',
-            choices: [
-                'ACH Processing - Back Office.postman_collection.json',
-                'Credit Card Processing - Back Office.postman_collection.json'
-            ],
-            description: 'Select Postman Collection to run'
-        )
-        choice(
-            name: 'ENVIRONMENT',
-            choices: [
-                'SuitePayments - Visa - Release QA.postman_environment.json',
-                'SuitePayments - Visa - UAT - Vishali.postman_environment.json'
-            ],
-            description: 'Select Postman Environment to run'
-        )
+        choice(name: 'RUN_MODE', choices: ['single', 'all'], description: 'Choose whether to run one collection or all')
+        choice(name: 'ENV', choices: ['SuitePayments - Visa - Release QA.postman_environment.json', 'SuitePayments - Visa - UAT - Vishali.postman_environment.json'], description: 'Select environment file')
+        choice(name: 'COLLECTION', choices: ['ACH Processing - Back Office.postman_collection.json', 'Credit Card Processing - Back Office.postman_collection.json'], description: 'Select a single collection (used only if RUN_MODE=single)')
     }
 
     stages {
-        stage('Checkout') {
+        stage('Install Dependencies') {
             steps {
-                git branch: 'main', url: 'https://github.com/vishaligujral2024/PostmanAutomation.git'
+                sh '''
+                    npm install -g newman newman-reporter-allure
+                '''
             }
         }
 
-        stage('Run Newman Tests') {
+        stage('Run Postman Tests') {
             steps {
-                bat """
-                npx newman run "collections/${COLLECTION}" ^
-                  -e "environments/${ENVIRONMENT}" ^
-                  -r cli,allure --reporter-allure-export "%WORKSPACE%\\allure-results"
-                """
+                script {
+                    if (params.RUN_MODE == 'single') {
+                        // Run selected collection
+                        sh """
+                            newman run postman/collections/${params.COLLECTION} \
+                            -e postman/environments/${params.ENV} \
+                            --reporters cli,allure \
+                            --reporter-allure-export results/allure/${params.COLLECTION}
+                        """
+                    } else {
+                        // Run all collections in folder
+                        sh """
+                            mkdir -p results/allure
+                            for file in postman/collections/*.json; do
+                                echo "Running collection: $file"
+                                name=$(basename "$file" .json)
+                                newman run "$file" \
+                                -e postman/environments/${params.ENV} \
+                                --reporters cli,allure \
+                                --reporter-allure-export results/allure/$name
+                            done
+                        """
+                    }
+                }
             }
         }
 
         stage('Allure Report') {
             steps {
-                allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
-            }
-        }
-    }
-
-    post {
-        always {
-            archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
-        }
-        unsuccessful {
-            script {
-                currentBuild.result = 'FAILURE'
+                allure includeProperties: false, jdk: '', results: [[path: 'results/allure']]
             }
         }
     }
