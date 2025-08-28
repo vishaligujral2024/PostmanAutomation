@@ -3,11 +3,23 @@ pipeline {
 
     parameters {
         choice(name: 'RUN_MODE', choices: ['single', 'all'], description: 'Choose whether to run one collection or all')
-        choice(name: 'ENV', choices: ['SuitePayments - Visa - Release QA.postman_environment.json', 'SuitePayments - Visa - UAT - Vishali.postman_environment.json'], description: 'Select environment file')
-        choice(name: 'COLLECTION', choices: ['ACH Processing - Back Office.postman_collection.json', 'Credit Card Processing - Back Office.postman_collection.json'], description: 'Select a single collection (used only if RUN_MODE=single)')
+        choice(name: 'ENV', choices: [
+            'SuitePayments - Visa - Release QA.postman_environment.json',
+            'SuitePayments - Visa - UAT - Vishali.postman_environment.json'
+        ], description: 'Select environment file')
+        choice(name: 'COLLECTION', choices: [
+            'ACH Processing - Back Office.postman_collection.json',
+            'Credit Card Processing - Back Office.postman_collection.json'
+        ], description: 'Select a single collection (used only if RUN_MODE=single)')
     }
 
     stages {
+        stage('Checkout Repo') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Install Dependencies') {
             steps {
                 sh '''
@@ -22,24 +34,24 @@ pipeline {
                     if (params.RUN_MODE == 'single') {
                         // Run selected collection
                         sh """
-                            newman run postman/collections/${params.COLLECTION} \
-                            -e postman/environments/${params.ENV} \
+                            newman run "postman/collections/${params.COLLECTION}" \
+                            -e "postman/environments/${params.ENV}" \
                             --reporters cli,allure \
-                            --reporter-allure-export results/allure/${params.COLLECTION}
+                            --reporter-allure-export "results/allure/${params.COLLECTION}"
                         """
                     } else {
                         // Run all collections in folder
-                        sh """
+                        sh '''
                             mkdir -p results/allure
                             for file in postman/collections/*.json; do
                                 echo "Running collection: $file"
                                 name=$(basename "$file" .json)
                                 newman run "$file" \
-                                -e postman/environments/${params.ENV} \
+                                -e "postman/environments/${ENV}" \
                                 --reporters cli,allure \
-                                --reporter-allure-export results/allure/$name
+                                --reporter-allure-export "results/allure/$name"
                             done
-                        """
+                        '''
                     }
                 }
             }
